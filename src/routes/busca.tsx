@@ -6,14 +6,14 @@ import { categories } from "@/lib/demo-data";
 import { useCatalog } from "@/lib/store";
 import { pricesFor } from "@/lib/pricing";
 
-type S = { q?: string; cat?: string; market?: string; sort?: string };
+type S = { q?: string | undefined; cat?: string | undefined; market?: string | undefined; sort?: string | undefined };
 
 export const Route = createFileRoute("/busca")({
   validateSearch: (s: Record<string, unknown>): S => ({
-    q: typeof s.q === "string" ? s.q : undefined,
-    cat: typeof s.cat === "string" ? s.cat : undefined,
-    market: typeof s.market === "string" ? s.market : undefined,
-    sort: typeof s.sort === "string" ? s.sort : undefined,
+    q: typeof s["q"] === "string" ? s["q"] : undefined,
+    cat: typeof s["cat"] === "string" ? s["cat"] : undefined,
+    market: typeof s["market"] === "string" ? s["market"] : undefined,
+    sort: typeof s["sort"] === "string" ? s["sort"] : undefined,
   }),
   head: () => ({
     meta: [

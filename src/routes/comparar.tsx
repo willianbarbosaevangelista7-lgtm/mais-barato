@@ -6,8 +6,8 @@ import { useCatalog } from "@/lib/store";
 import { brl, fmtDate, pct, priceSummary, pricesFor, sizeLabel, unitPrice } from "@/lib/pricing";
 
 export const Route = createFileRoute("/comparar")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => ({
-    id: typeof s.id === "string" ? s.id : undefined,
+  validateSearch: (s: Record<string, unknown>): { id?: string | undefined } => ({
+    id: typeof s["id"] === "string" ? s["id"] : undefined,
   }),
   head: () => ({
     meta: [
