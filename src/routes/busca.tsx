@@ -26,7 +26,7 @@ export const Route = createFileRoute("/busca")({
   component: Busca,
 });
 
-export const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 function Busca() {
   const { q = "", cat = "", market = "", sort = "menor" } = Route.useSearch();

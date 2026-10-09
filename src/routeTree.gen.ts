@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BuscaRouteImport } from './routes/busca'
+import { Route as CompararRouteImport } from './routes/comparar'
+import { Route as ListaRouteImport } from './routes/lista'
+import { Route as SupermercadosRouteImport } from './routes/supermercados'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuscaRoute = BuscaRouteImport.update({
+  id: '/busca',
+  path: '/busca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompararRoute = CompararRouteImport.update({
+  id: '/comparar',
+  path: '/comparar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListaRoute = ListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupermercadosRoute = SupermercadosRouteImport.update({
+  id: '/supermercados',
+  path: '/supermercados',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
+  '/lista': typeof ListaRoute
+  '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
+  '/lista': typeof ListaRoute
+  '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
+  '/lista': typeof ListaRoute
+  '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/busca' | '/comparar' | '/lista' | '/supermercados'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/busca' | '/comparar' | '/lista' | '/supermercados'
+  id: '__root__' | '/' | '/busca' | '/comparar' | '/lista' | '/supermercados'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuscaRoute: typeof BuscaRoute
+  CompararRoute: typeof CompararRoute
+  ListaRoute: typeof ListaRoute
+  SupermercadosRoute: typeof SupermercadosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/busca': {
+      id: '/busca'
+      path: '/busca'
+      fullPath: '/busca'
+      preLoaderRoute: typeof BuscaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparar': {
+      id: '/comparar'
+      path: '/comparar'
+      fullPath: '/comparar'
+      preLoaderRoute: typeof CompararRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lista': {
+      id: '/lista'
+      path: '/lista'
+      fullPath: '/lista'
+      preLoaderRoute: typeof ListaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supermercados': {
+      id: '/supermercados'
+      path: '/supermercados'
+      fullPath: '/supermercados'
+      preLoaderRoute: typeof SupermercadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuscaRoute: BuscaRoute,
+  CompararRoute: CompararRoute,
+  ListaRoute: ListaRoute,
+  SupermercadosRoute: SupermercadosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

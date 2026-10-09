@@ -137,6 +137,7 @@ function Supermercados() {
         </Card>
       </div>
 
+      <div className="mt-4" />
       <Card title={`Preços de ${market.name}`}>
         <ul className="divide-y divide-border text-sm">
           {myPrices.map((pr) => {
