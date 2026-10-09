@@ -3,7 +3,7 @@ import { Trophy } from "lucide-react";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { AddToListButton, ProductThumb } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
-import { brl, fmtDate, pct, priceSummary, pricesFor, sizeLabel, unitPrice } from "@/lib/pricing";
+import { brl, fmtDate, pct, priceSummary, pricesFor, sizeLabel, unitPrice, comparable } from "@/lib/pricing";
 
 export const Route = createFileRoute("/comparar")({
   validateSearch: (s: Record<string, unknown>): { id?: string | undefined } => ({
@@ -50,7 +50,7 @@ function Detail({ productId }: { productId: string }) {
   const prices = pricesFor(catalog, p.id);
   const s = priceSummary(prices);
   const equivalents = catalog.products
-    .filter((x) => x.group === p.group)
+    .filter((x) => comparable(x, p))
     .map((x) => {
       const best = pricesFor(catalog, x.id)[0];
       return { x, best, up: best ? unitPrice(x, best.price) : null };

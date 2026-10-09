@@ -84,7 +84,8 @@ function Lista() {
             <p className="text-sm opacity-90">Total estimado (melhor preço de cada item)</p>
             <p className="text-3xl font-extrabold" data-testid="total">{brl(a.splitTotal)}</p>
             <p className="mt-2 text-sm">Economia potencial: <strong>{brl(a.potentialSavings)}</strong></p>
-            <p className="text-xs opacity-80">comparado a pagar o preço mais alto de cada item ({brl(a.worstTotal)})</p>
+            <p className="text-xs opacity-80">comparado a pagar o preço mais alto de cada item ({brl(a.worstTotal)}). Considera {a.comparedItems} item(ns) vendido(s) em mais de um mercado, sempre o mesmo produto e tamanho.</p>
+            {a.unpriced > 0 && <p className="mt-1 text-xs opacity-80">{a.unpriced} item(ns) sem preço não entram no total.</p>}
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
             <h2 className="font-extrabold text-primary-deep">Um mercado ou vários?</h2>

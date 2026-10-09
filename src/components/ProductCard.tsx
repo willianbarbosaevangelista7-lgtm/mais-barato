@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/types";
-import { brl, fmtDate, sizeLabel, type MarketPrice } from "@/lib/pricing";
+import { brl, fmtDate, pct, priceSummary, sizeLabel, type MarketPrice } from "@/lib/pricing";
 import { listActions, useList } from "@/lib/store";
 
 export function ProductThumb({ p, size = "md" }: { p: Product; size?: "sm" | "md" }) {
@@ -38,6 +38,7 @@ export function AddToListButton({ productId, compact }: { productId: string; com
 
 export function ProductCard({ p, prices }: { p: Product; prices: MarketPrice[] }) {
   const best = prices[0];
+  const s = priceSummary(prices);
   return (
     <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
       <div className="flex gap-3">
@@ -52,6 +53,11 @@ export function ProductCard({ p, prices }: { p: Product; prices: MarketPrice[] }
               a partir de <strong className="text-lg text-primary">{brl(best.price)}</strong>
             </p>
           )}
+          {s && prices.length > 1 && s.diff > 0 && (
+            <p className="text-xs font-semibold text-success">
+              Economize até {brl(s.diff)} ({pct(s.diffPct)}) escolhendo o mais barato
+            </p>
+          )}
         </div>
       </div>
       <ul className="mt-3 space-y-1.5">
@@ -64,7 +70,12 @@ export function ProductCard({ p, prices }: { p: Product; prices: MarketPrice[] }
                 {mp.isOffer && " · oferta demo"}
               </span>
             </span>
-            <span className={`shrink-0 font-bold ${i === 0 ? "text-primary" : ""}`}>{brl(mp.price)}</span>
+            <span className="shrink-0 text-right">
+              <span className={`block font-bold ${i === 0 ? "text-primary" : ""}`}>{brl(mp.price)}</span>
+              <span className="block text-[11px] text-muted-foreground">
+                {i === 0 ? (prices.length > 1 ? "menor preço" : "") : `+${brl(mp.price - best!.price)} (+${pct(((mp.price - best!.price) / best!.price) * 100)})`}
+              </span>
+            </span>
           </li>
         ))}
         {!prices.length && <li className="text-sm text-muted-foreground">Sem preços cadastrados.</li>}

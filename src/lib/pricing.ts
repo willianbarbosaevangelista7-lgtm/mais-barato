@@ -68,6 +68,8 @@ export interface ListAnalysis {
   splitTotal: number;
   worstTotal: number;
   potentialSavings: number;
+  unpriced: number;
+  comparedItems: number;
   markets: { marketId: string; name: string; total: number; missing: number }[];
   bestSingle?: { marketId: string; name: string; total: number } | undefined;
 }
@@ -82,13 +84,18 @@ export function analyzeList(catalog: Catalog, list: ListItem[]): ListAnalysis {
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
 
-  const splitTotal = rows.reduce((s, r) => s + (r.best?.price ?? 0) * r.item.qty, 0);
-  const worstTotal = rows.reduce((s, r) => s + (r.worst?.price ?? 0) * r.item.qty, 0);
+  // Only items with a price count toward totals; savings only from items sold in 2+ markets
+  // (same product, same size), so we never compare different sizes or mix incompatible savings.
+  const priced = rows.filter((r) => r.best);
+  const splitTotal = priced.reduce((s, r) => s + r.best!.price * r.item.qty, 0);
+  const multi = priced.filter((r) => r.prices.length > 1);
+  const worstTotal = priced.reduce((s, r) => s + r.worst!.price * r.item.qty, 0);
+  const potentialSavings = multi.reduce((s, r) => s + (r.worst!.price - r.best!.price) * r.item.qty, 0);
 
   const markets = catalog.markets.map((m) => {
     let total = 0;
     let missing = 0;
-    for (const r of rows) {
+    for (const r of priced) {
       const mp = r.prices.find((p) => p.marketId === m.id);
       if (mp) total += mp.price * r.item.qty;
       else missing++;
@@ -101,8 +108,10 @@ export function analyzeList(catalog: Catalog, list: ListItem[]): ListAnalysis {
     rows: rows.map(({ prices: _p, ...r }) => r),
     splitTotal,
     worstTotal,
-    potentialSavings: worstTotal - splitTotal,
+    potentialSavings,
+    unpriced: rows.length - priced.length,
+    comparedItems: multi.length,
     markets,
-    bestSingle: rows.length ? complete[0] : undefined,
+    bestSingle: priced.length ? complete[0] : undefined,
   };
 }
