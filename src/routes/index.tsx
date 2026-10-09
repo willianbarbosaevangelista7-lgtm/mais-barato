@@ -105,7 +105,7 @@ function Home() {
               <Store className="h-5 w-5 shrink-0 text-primary" />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{m.name}</span>
-                <span className="text-xs text-muted-foreground">{m.area} · {catalog.prices.filter((p) => p.marketId === m.id).length} preços</span>
+                <span className="text-xs text-muted-foreground">{m.neighborhood} · {catalog.prices.filter((p) => p.marketId === m.id).length} preços</span>
               </span>
             </Link>
           ))}

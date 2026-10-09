@@ -3,10 +3,10 @@ import type { Catalog, Price } from "./types";
 // ATENÇÃO: todos os dados abaixo são FICTÍCIOS, criados apenas para demonstração.
 export const demoCatalog: Catalog = {
   markets: [
-    { id: "m1", name: "Mercado Exemplo Ipê", area: "Zona Norte (fictício)" },
-    { id: "m2", name: "Supermercado Demo Jacarandá", area: "Zona Norte (fictício)" },
-    { id: "m3", name: "Atacado Teste Cantareira", area: "Zona Norte (fictício)" },
-    { id: "m4", name: "Mercadinho Modelo Tucuruvi", area: "Zona Norte (fictício)" },
+    { id: "m1", name: "Mercado Exemplo Ipê", neighborhood: "Zona Norte (fictício)", address: "" },
+    { id: "m2", name: "Supermercado Demo Jacarandá", neighborhood: "Zona Norte (fictício)", address: "" },
+    { id: "m3", name: "Atacado Teste Cantareira", neighborhood: "Zona Norte (fictício)", address: "" },
+    { id: "m4", name: "Mercadinho Modelo Tucuruvi", neighborhood: "Zona Norte (fictício)", address: "" },
   ],
   products: [
     { id: "p1", name: "Arroz branco tipo 1", brand: "Grão Bom", category: "Mercearia", size: 5, unit: "kg", emoji: "🍚", group: "arroz" },

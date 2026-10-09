@@ -37,7 +37,7 @@ function createStore<T>(key: string, initial: T) {
   };
 }
 
-export const catalogStore = createStore<Catalog>("maisbarato:catalog:v1", demoCatalog);
+export const catalogStore = createStore<Catalog>("maisbarato:catalog:v2", demoCatalog);
 export const listStore = createStore<ListItem[]>("maisbarato:list:v1", []);
 
 export const useCatalog = () =>
