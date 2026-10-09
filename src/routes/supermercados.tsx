@@ -1,19 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { Pencil } from "lucide-react";
 import { AppShell, PageTitle } from "@/components/AppShell";
-import { categories, demoCatalog } from "@/lib/demo-data";
-import { catalogStore, useCatalog } from "@/lib/store";
-import { brl, fmtDate, sizeLabel, todayISO } from "@/lib/pricing";
+import { categories } from "@/lib/demo-data";
+import { useCatalog } from "@/lib/store";
+import { catalogRepo, groupKey, newId } from "@/lib/repository";
+import { brl, fmtDate, parseMoney, sizeLabel, todayISO } from "@/lib/pricing";
 import type { Unit } from "@/lib/types";
 
 export const Route = createFileRoute("/supermercados")({
   head: () => ({
     meta: [
       { title: "Área dos supermercados (demo) — MaisBarato" },
-      { name: "description", content: "Demonstração de cadastro de produtos, preços e ofertas para supermercados." },
+      { name: "description", content: "Cadastre e edite supermercados, produtos, preços e ofertas (dados de demonstração)." },
       { property: "og:title", content: "Área dos supermercados — MaisBarato" },
-      { property: "og:description", content: "Cadastre produtos, informe preços e crie ofertas com validade." },
+      { property: "og:description", content: "Cadastre mercados, produtos, preços com data de atualização e ofertas com validade." },
     ],
   }),
   component: Supermercados,
@@ -21,6 +23,8 @@ export const Route = createFileRoute("/supermercados")({
 
 const field = "h-11 w-full rounded-xl border border-input bg-card px-3 text-sm";
 const btn = "h-11 w-full rounded-xl bg-primary font-semibold text-primary-foreground hover:bg-primary-deep";
+const btn2 = "h-11 w-full rounded-xl border border-border font-semibold hover:bg-muted";
+const UNITS: Unit[] = ["kg", "g", "L", "ml", "un"];
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -34,132 +38,194 @@ function L({ label, children }: { label: string; children: ReactNode }) {
   return <label className="block text-xs font-semibold text-muted-foreground">{label}<div className="mt-1">{children}</div></label>;
 }
 
+type MarketForm = { id?: string | undefined; name: string; neighborhood: string; address: string };
+type ItemForm = {
+  productId?: string | undefined;
+  name: string; brand: string; category: string; size: string; unit: Unit;
+  price: string; updatedAt: string; hasOffer: boolean; offerPrice: string; validUntil: string;
+};
+const emptyItem = (): ItemForm => ({
+  name: "", brand: "", category: categories[0]!, size: "", unit: "kg",
+  price: "", updatedAt: todayISO(), hasOffer: false, offerPrice: "", validUntil: "",
+});
+const money = (v: number) => v.toFixed(2).replace(".", ",");
+
 function Supermercados() {
   const catalog = useCatalog();
-  const [marketId, setMarketId] = useState("m1");
-  const market = catalog.markets.find((m) => m.id === marketId)!;
+  const [marketId, setMarketId] = useState(catalog.markets[0]?.id ?? "");
+  const market = catalog.markets.find((m) => m.id === marketId) ?? catalog.markets[0];
+  const [mf, setMf] = useState<MarketForm | null>(null);
+  const [it, setIt] = useState<ItemForm>(emptyItem);
 
-  const addProduct = (e: FormEvent<HTMLFormElement>) => {
+  const saveMarket = (e: FormEvent) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const name = String(f.get("name")).trim();
-    const size = Number(f.get("size"));
-    const price = Number(String(f.get("price")).replace(",", "."));
-    if (!name || !(size > 0) || !(price > 0)) return void toast.error("Preencha nome, tamanho e preço válidos.");
-    const id = `c${Date.now()}`;
-    catalogStore.set((c) => ({
-      ...c,
-      products: [...c.products, {
-        id, name, brand: String(f.get("brand")).trim() || "Sem marca", category: String(f.get("category")),
-        size, unit: f.get("unit") as Unit, emoji: "🛒", group: name.toLowerCase(),
-      }],
-      prices: [...c.prices, { productId: id, marketId, price, updatedAt: todayISO() }],
-    }));
-    e.currentTarget.reset();
-    toast.success("Produto cadastrado (demonstração)");
+    if (!mf) return;
+    const name = mf.name.trim();
+    const neighborhood = mf.neighborhood.trim();
+    if (name.length < 2) return void toast.error("Informe o nome do supermercado.");
+    if (!neighborhood) return void toast.error("Informe o bairro.");
+    const id = mf.id ?? newId("m");
+    catalogRepo.saveMarket({ id, name, neighborhood, address: mf.address.trim() });
+    setMarketId(id);
+    setMf(null);
+    toast.success(mf.id ? "Supermercado atualizado" : "Supermercado cadastrado");
   };
 
-  const setPrice = (e: FormEvent<HTMLFormElement>) => {
+  const editItem = (productId: string) => {
+    const p = catalog.products.find((x) => x.id === productId);
+    const pr = catalog.prices.find((x) => x.productId === productId && x.marketId === market?.id);
+    const o = catalog.offers.find((x) => x.productId === productId && x.marketId === market?.id);
+    if (!p) return;
+    setIt({
+      productId, name: p.name, brand: p.brand, category: p.category, size: String(p.size), unit: p.unit,
+      price: pr ? money(pr.price) : "", updatedAt: pr?.updatedAt ?? todayISO(),
+      hasOffer: !!o, offerPrice: o ? money(o.price) : "", validUntil: o?.validUntil ?? "",
+    });
+    document.getElementById("form-produto")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const saveItem = (e: FormEvent) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const productId = String(f.get("product"));
-    const price = Number(String(f.get("price")).replace(",", "."));
+    if (!market) return void toast.error("Cadastre um supermercado primeiro.");
+    const name = it.name.trim();
+    const size = Number(it.size.replace(",", "."));
+    const price = parseMoney(it.price);
+    if (name.length < 2) return void toast.error("Informe o nome do produto.");
+    if (!(size > 0)) return void toast.error("Informe um peso ou volume válido.");
     if (!(price > 0)) return void toast.error("Informe um preço válido.");
-    catalogStore.set((c) => ({
-      ...c,
-      prices: [...c.prices.filter((p) => !(p.productId === productId && p.marketId === marketId)),
-        { productId, marketId, price, updatedAt: todayISO() }],
-    }));
-    e.currentTarget.reset();
-    toast.success("Preço atualizado com a data de hoje");
+    if (!it.updatedAt || it.updatedAt > todayISO()) return void toast.error("A data de atualização não pode ser futura.");
+    let offerPrice = 0;
+    if (it.hasOffer) {
+      offerPrice = parseMoney(it.offerPrice);
+      if (!(offerPrice > 0) || offerPrice >= price) return void toast.error(`O preço da oferta deve ser menor que ${brl(price)}.`);
+      if (!it.validUntil || it.validUntil < todayISO()) return void toast.error("A validade da oferta deve ser hoje ou depois.");
+    }
+    const brand = it.brand.trim() || "Sem marca";
+    // Same name + brand + size + unit = same product (prices are attached to it per market).
+    const existing = it.productId
+      ? catalog.products.find((p) => p.id === it.productId)
+      : catalog.products.find((p) => groupKey(p.name) === groupKey(name) && groupKey(p.brand) === groupKey(brand) && p.size === size && p.unit === it.unit);
+    const productId = existing?.id ?? newId("p");
+    catalogRepo.saveProduct({
+      id: productId, name, brand, category: it.category, size, unit: it.unit,
+      emoji: existing?.emoji ?? "🛒", group: existing?.group ?? groupKey(name),
+    });
+    catalogRepo.savePrice({ productId, marketId: market.id, price, updatedAt: it.updatedAt });
+    if (it.hasOffer) catalogRepo.saveOffer({ id: newId("o"), productId, marketId: market.id, price: offerPrice, validUntil: it.validUntil });
+    else catalogRepo.removeOffer(productId, market.id);
+    toast.success(it.productId || existing ? "Produto e preço atualizados" : "Produto cadastrado");
+    setIt(emptyItem());
   };
 
-  const addOffer = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const productId = String(f.get("product"));
-    const price = Number(String(f.get("price")).replace(",", "."));
-    const validUntil = String(f.get("validUntil"));
-    const regular = catalog.prices.find((p) => p.productId === productId && p.marketId === marketId);
-    if (!regular) return void toast.error("Cadastre primeiro o preço normal deste produto neste mercado.");
-    if (!(price > 0) || price >= regular.price) return void toast.error(`A oferta deve ser menor que ${brl(regular.price)}.`);
-    if (!validUntil || validUntil < todayISO()) return void toast.error("Escolha uma validade a partir de hoje.");
-    catalogStore.set((c) => ({
-      ...c,
-      offers: [...c.offers.filter((o) => !(o.productId === productId && o.marketId === marketId)),
-        { id: `o${Date.now()}`, productId, marketId, price, validUntil }],
-    }));
-    e.currentTarget.reset();
-    toast.success("Oferta de demonstração criada");
-  };
-
-  const myPrices = catalog.prices.filter((p) => p.marketId === marketId);
-  const myOffers = catalog.offers.filter((o) => o.marketId === marketId);
-  const productOptions = catalog.products.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.brand} {sizeLabel(p)}</option>);
+  const set = (patch: Partial<ItemForm>) => setIt((s) => ({ ...s, ...patch }));
+  const myPrices = market ? catalog.prices.filter((p) => p.marketId === market.id) : [];
 
   return (
     <AppShell>
-      <PageTitle title="Área dos supermercados" subtitle="Interface de demonstração. Os dados ficam salvos apenas neste navegador; não há integração real com mercados." />
-      <L label="Você está gerenciando">
-        <select className={field} value={marketId} onChange={(e) => setMarketId(e.target.value)}>
-          {catalog.markets.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-      </L>
+      <PageTitle title="Área dos supermercados" subtitle="Demonstração: os dados ficam salvos apenas neste navegador. Não há integração real com mercados nem atualização automática." />
 
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
-        <Card title="Cadastrar produto">
-          <form onSubmit={addProduct} className="space-y-2">
-            <L label="Nome"><input name="name" className={field} placeholder="Ex.: Macarrão espaguete" /></L>
-            <L label="Marca"><input name="brand" className={field} /></L>
-            <L label="Categoria"><select name="category" className={field}>{categories.map((c) => <option key={c}>{c}</option>)}</select></L>
+      <Card title="Supermercado">
+        {mf ? (
+          <form onSubmit={saveMarket} className="space-y-2">
+            <L label="Nome do supermercado"><input className={field} value={mf.name} onChange={(e) => setMf({ ...mf, name: e.target.value })} /></L>
+            <L label="Bairro"><input className={field} value={mf.neighborhood} onChange={(e) => setMf({ ...mf, neighborhood: e.target.value })} /></L>
+            <L label="Endereço comercial (opcional)"><input className={field} value={mf.address} onChange={(e) => setMf({ ...mf, address: e.target.value })} placeholder="Rua, número" /></L>
             <div className="grid grid-cols-2 gap-2">
-              <L label="Tamanho"><input name="size" type="number" step="any" min="0" className={field} /></L>
-              <L label="Unidade"><select name="unit" className={field}>{["kg", "g", "L", "ml", "un"].map((u) => <option key={u}>{u}</option>)}</select></L>
+              <button type="button" className={btn2} onClick={() => setMf(null)}>Cancelar</button>
+              <button className={btn}>Salvar</button>
             </div>
-            <L label="Preço (R$)"><input name="price" inputMode="decimal" className={field} placeholder="0,00" /></L>
-            <button className={btn}>Cadastrar</button>
           </form>
-        </Card>
-        <Card title="Informar preço">
-          <form onSubmit={setPrice} className="space-y-2">
-            <L label="Produto"><select name="product" className={field}>{productOptions}</select></L>
-            <L label="Novo preço (R$)"><input name="price" inputMode="decimal" className={field} placeholder="0,00" /></L>
-            <button className={btn}>Salvar preço</button>
-          </form>
-        </Card>
-        <Card title="Criar oferta">
-          <form onSubmit={addOffer} className="space-y-2">
-            <L label="Produto"><select name="product" className={field}>{productOptions}</select></L>
-            <L label="Preço da oferta (R$)"><input name="price" inputMode="decimal" className={field} placeholder="0,00" /></L>
-            <L label="Válida até"><input name="validUntil" type="date" min={todayISO()} className={field} /></L>
-            <button className={btn}>Criar oferta</button>
-          </form>
+        ) : (
+          <div className="space-y-2">
+            <L label="Você está gerenciando">
+              <select className={field} value={market?.id} onChange={(e) => { setMarketId(e.target.value); setIt(emptyItem()); }}>
+                {catalog.markets.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </L>
+            {market && (
+              <p className="text-sm text-muted-foreground">
+                {market.neighborhood} · {market.address || "Endereço não informado"}
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              {market && <button className={btn2} onClick={() => setMf({ ...market })}>Editar mercado</button>}
+              <button className={btn2} onClick={() => setMf({ name: "", neighborhood: "", address: "" })}>Novo mercado</button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div id="form-produto" className="scroll-mt-20">
+          <Card title={it.productId ? "Editar produto e preço" : "Cadastrar produto e preço"}>
+            <form onSubmit={saveItem} className="space-y-2">
+              <L label="Nome do produto"><input className={field} value={it.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Macarrão espaguete" /></L>
+              <L label="Marca"><input className={field} value={it.brand} onChange={(e) => set({ brand: e.target.value })} /></L>
+              <L label="Categoria">
+                <select className={field} value={it.category} onChange={(e) => set({ category: e.target.value })}>
+                  {categories.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </L>
+              <div className="grid grid-cols-2 gap-2">
+                <L label="Peso ou volume"><input className={field} inputMode="decimal" value={it.size} onChange={(e) => set({ size: e.target.value })} /></L>
+                <L label="Unidade">
+                  <select className={field} value={it.unit} onChange={(e) => set({ unit: e.target.value as Unit })}>
+                    {UNITS.map((u) => <option key={u}>{u}</option>)}
+                  </select>
+                </L>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <L label="Preço (R$)"><input className={field} inputMode="decimal" value={it.price} onChange={(e) => set({ price: e.target.value })} placeholder="0,00" /></L>
+                <L label="Data da atualização"><input type="date" max={todayISO()} className={field} value={it.updatedAt} onChange={(e) => set({ updatedAt: e.target.value })} /></L>
+              </div>
+              <label className="flex items-center gap-2 py-1 text-sm font-semibold">
+                <input type="checkbox" className="h-5 w-5 accent-[var(--primary)]" checked={it.hasOffer} onChange={(e) => set({ hasOffer: e.target.checked })} />
+                Produto em oferta
+              </label>
+              {it.hasOffer && (
+                <div className="grid grid-cols-2 gap-2">
+                  <L label="Preço da oferta (R$)"><input className={field} inputMode="decimal" value={it.offerPrice} onChange={(e) => set({ offerPrice: e.target.value })} placeholder="0,00" /></L>
+                  <L label="Válida até"><input type="date" min={todayISO()} className={field} value={it.validUntil} onChange={(e) => set({ validUntil: e.target.value })} /></L>
+                </div>
+              )}
+              <div className={`grid gap-2 ${it.productId ? "grid-cols-2" : ""}`}>
+                {it.productId && <button type="button" className={btn2} onClick={() => setIt(emptyItem())}>Cancelar</button>}
+                <button className={btn}>{it.productId ? "Salvar alterações" : "Cadastrar"}</button>
+              </div>
+            </form>
+          </Card>
+        </div>
+
+        <Card title={`Preços de ${market?.name ?? "—"}`}>
+          <ul className="divide-y divide-border text-sm">
+            {myPrices.map((pr) => {
+              const p = catalog.products.find((x) => x.id === pr.productId);
+              const o = catalog.offers.find((x) => x.productId === pr.productId && x.marketId === pr.marketId);
+              if (!p) return null;
+              return (
+                <li key={pr.productId} className="flex items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{p.name}</span>
+                    <span className="text-[11px] text-muted-foreground">{p.brand} · {sizeLabel(p)} · atualizado em {fmtDate(pr.updatedAt)}</span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <strong>{brl(pr.price)}</strong>
+                    {o && <span className="block text-[11px] text-success">oferta {brl(o.price)} até {fmtDate(o.validUntil)}</span>}
+                  </span>
+                  <button onClick={() => editItem(p.id)} aria-label={`Editar ${p.name}`} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg hover:bg-muted">
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+            {!myPrices.length && <li className="py-2 text-muted-foreground">Nenhum preço cadastrado neste mercado.</li>}
+          </ul>
         </Card>
       </div>
 
-      <div className="mt-4" />
-      <Card title={`Preços de ${market.name}`}>
-        <ul className="divide-y divide-border text-sm">
-          {myPrices.map((pr) => {
-            const p = catalog.products.find((x) => x.id === pr.productId);
-            const o = myOffers.find((x) => x.productId === pr.productId);
-            return (
-              <li key={pr.productId} className="flex justify-between gap-2 py-2">
-                <span className="min-w-0 truncate">{p?.name} · {p?.brand}</span>
-                <span className="shrink-0 text-right">
-                  <strong>{brl(pr.price)}</strong>
-                  <span className="block text-[11px] text-muted-foreground">
-                    {fmtDate(pr.updatedAt)}{o && ` · oferta ${brl(o.price)} até ${fmtDate(o.validUntil)}`}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
       <button
         className="mt-4 text-sm font-semibold text-destructive"
-        onClick={() => { catalogStore.set(demoCatalog); toast.success("Dados de demonstração restaurados"); }}
+        onClick={() => { catalogRepo.reset(); setMarketId("m1"); setIt(emptyItem()); toast.success("Dados de demonstração restaurados"); }}
       >
         Restaurar dados de demonstração
       </button>
