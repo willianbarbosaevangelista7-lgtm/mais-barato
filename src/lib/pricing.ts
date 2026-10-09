@@ -19,6 +19,13 @@ export function unitPrice(p: Product, price: number) {
   return { value: price / base, unit };
 }
 
+/** Only products measured in the same dimension (weight, volume, units) can be compared by unit price. */
+export const dimension = (p: Product) => (p.unit === "g" || p.unit === "kg" ? "peso" : p.unit === "ml" || p.unit === "L" ? "volume" : "un");
+export const comparable = (a: Product, b: Product) => a.group === b.group && dimension(a) === dimension(b);
+
+/** Parses "12,90" or "12.90" into a number (NaN when invalid). */
+export const parseMoney = (s: string) => Number(s.trim().replace(/\./g, (m, i, str) => (str.includes(",") ? "" : m)).replace(",", "."));
+
 export interface MarketPrice {
   marketId: string;
   marketName: string;
