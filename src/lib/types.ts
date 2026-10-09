@@ -4,7 +4,8 @@ export type Unit = "kg" | "g" | "L" | "ml" | "un";
 export interface Market {
   id: string;
   name: string;
-  area: string;
+  neighborhood: string;
+  address: string;
 }
 
 export interface Product {
