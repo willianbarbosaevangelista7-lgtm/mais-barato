@@ -112,7 +112,7 @@ function Detail({ productId }: { productId: string }) {
       {equivalents.length > 1 && (
         <div>
           <h3 className="font-extrabold text-primary-deep">Produtos equivalentes</h3>
-          <p className="mb-2 text-xs text-muted-foreground">Comparados pelo preço por {equivalents[0].up!.unit}, considerando marca e tamanho.</p>
+          <p className="mb-2 text-xs text-muted-foreground">Comparados pelo preço por {equivalents[0]?.up?.unit}, considerando marca e tamanho.</p>
           <ul className="space-y-2">
             {equivalents.map(({ x, best, up }, i) => (
               <li key={x.id}>

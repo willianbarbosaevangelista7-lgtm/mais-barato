@@ -52,7 +52,7 @@ const ids = ["m1", "m2", "m3", "m4"];
 demoCatalog.prices = table.flatMap(([productId, ...vals]) =>
   vals
     .map((v, i): Price | null =>
-      v == null ? null : { productId, marketId: ids[i], price: v, updatedAt: dates[i] },
+      v == null ? null : { productId, marketId: ids[i]!, price: v, updatedAt: dates[i]! },
     )
     .filter((p): p is Price => p !== null),
 );

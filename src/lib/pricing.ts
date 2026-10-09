@@ -25,7 +25,7 @@ export interface MarketPrice {
   price: number;
   updatedAt: string;
   isOffer: boolean;
-  validUntil?: string;
+  validUntil?: string | undefined;
 }
 
 export function pricesFor(catalog: Catalog, productId: string, today = todayISO()): MarketPrice[] {
@@ -48,19 +48,21 @@ export function pricesFor(catalog: Catalog, productId: string, today = todayISO(
 }
 
 export function priceSummary(prices: MarketPrice[]) {
-  if (!prices.length) return null;
-  const min = prices[0].price;
-  const max = prices[prices.length - 1].price;
-  return { min, max, diff: max - min, diffPct: max > 0 ? ((max - min) / max) * 100 : 0, cheapest: prices[0] };
+  const first = prices[0];
+  const last = prices[prices.length - 1];
+  if (!first || !last) return null;
+  const min = first.price;
+  const max = last.price;
+  return { min, max, diff: max - min, diffPct: max > 0 ? ((max - min) / max) * 100 : 0, cheapest: first };
 }
 
 export interface ListAnalysis {
-  rows: { item: ListItem; product: Product; best?: MarketPrice; worst?: MarketPrice }[];
+  rows: { item: ListItem; product: Product; best?: MarketPrice | undefined; worst?: MarketPrice | undefined }[];
   splitTotal: number;
   worstTotal: number;
   potentialSavings: number;
   markets: { marketId: string; name: string; total: number; missing: number }[];
-  bestSingle?: { marketId: string; name: string; total: number };
+  bestSingle?: { marketId: string; name: string; total: number } | undefined;
 }
 
 export function analyzeList(catalog: Catalog, list: ListItem[]): ListAnalysis {
