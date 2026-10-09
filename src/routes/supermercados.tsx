@@ -45,7 +45,7 @@ function Supermercados() {
     const name = String(f.get("name")).trim();
     const size = Number(f.get("size"));
     const price = Number(String(f.get("price")).replace(",", "."));
-    if (!name || !(size > 0) || !(price > 0)) return toast.error("Preencha nome, tamanho e preço válidos.");
+    if (!name || !(size > 0) || !(price > 0)) return void toast.error("Preencha nome, tamanho e preço válidos.");
     const id = `c${Date.now()}`;
     catalogStore.set((c) => ({
       ...c,
@@ -64,7 +64,7 @@ function Supermercados() {
     const f = new FormData(e.currentTarget);
     const productId = String(f.get("product"));
     const price = Number(String(f.get("price")).replace(",", "."));
-    if (!(price > 0)) return toast.error("Informe um preço válido.");
+    if (!(price > 0)) return void toast.error("Informe um preço válido.");
     catalogStore.set((c) => ({
       ...c,
       prices: [...c.prices.filter((p) => !(p.productId === productId && p.marketId === marketId)),
@@ -81,9 +81,9 @@ function Supermercados() {
     const price = Number(String(f.get("price")).replace(",", "."));
     const validUntil = String(f.get("validUntil"));
     const regular = catalog.prices.find((p) => p.productId === productId && p.marketId === marketId);
-    if (!regular) return toast.error("Cadastre primeiro o preço normal deste produto neste mercado.");
-    if (!(price > 0) || price >= regular.price) return toast.error(`A oferta deve ser menor que ${brl(regular.price)}.`);
-    if (!validUntil || validUntil < todayISO()) return toast.error("Escolha uma validade a partir de hoje.");
+    if (!regular) return void toast.error("Cadastre primeiro o preço normal deste produto neste mercado.");
+    if (!(price > 0) || price >= regular.price) return void toast.error(`A oferta deve ser menor que ${brl(regular.price)}.`);
+    if (!validUntil || validUntil < todayISO()) return void toast.error("Escolha uma validade a partir de hoje.");
     catalogStore.set((c) => ({
       ...c,
       offers: [...c.offers.filter((o) => !(o.productId === productId && o.marketId === marketId)),
