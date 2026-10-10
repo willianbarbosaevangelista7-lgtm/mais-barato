@@ -6,7 +6,7 @@ export const fmtDate = (iso: string) => {
   const [y, m, d] = iso.slice(0, 10).split("-");
   return `${d}/${m}/${y}`;
 };
-export const todayISO = () => new Date().toISOString().slice(0, 10);
+export const todayISO = () => new Date().toLocaleDateString("en-CA"); // local date, YYYY-MM-DD
 
 export function sizeLabel(p: Product) {
   return `${p.size.toLocaleString("pt-BR")} ${p.unit}`;
