@@ -4,17 +4,24 @@ import { toast } from "sonner";
 import type { Product } from "@/lib/types";
 import { brl, fmtDate, pct, priceSummary, sizeLabel, type MarketPrice } from "@/lib/pricing";
 import { listActions, useList } from "@/lib/store";
+import { useImageUrl } from "@/lib/catalog-cloud";
 
 export function ProductThumb({ p, size = "md" }: { p: Product; size?: "sm" | "md" }) {
+  const url = useImageUrl(p.imagePath);
+  const box = size === "sm" ? "h-12 w-12 text-2xl" : "h-16 w-16 text-4xl";
+  if (url) {
+    return <img src={url} alt={`Foto: ${p.name}`} loading="lazy" className={`${box} shrink-0 rounded-xl bg-secondary object-contain`} />;
+  }
   return (
-    <div
-      role="img"
-      aria-label={`Imagem ilustrativa: ${p.name}`}
-      className={`grid shrink-0 place-items-center rounded-xl bg-secondary ${size === "sm" ? "h-12 w-12 text-2xl" : "h-16 w-16 text-4xl"}`}
-    >
+    <div role="img" aria-label={`Imagem ilustrativa: ${p.name}`} className={`grid shrink-0 place-items-center rounded-xl bg-secondary ${box}`}>
       {p.emoji}
     </div>
   );
+}
+
+export function BarcodeLabel({ p }: { p: Product }) {
+  if (!p.barcode) return null;
+  return <span className="block font-mono text-[11px] text-muted-foreground">Cód. {p.barcode}</span>;
 }
 
 export function AddToListButton({ productId, compact }: { productId: string; compact?: boolean }) {

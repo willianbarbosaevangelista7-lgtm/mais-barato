@@ -6,6 +6,7 @@ export interface Market {
   name: string;
   neighborhood: string;
   address: string;
+  isDemo?: boolean | undefined;
 }
 
 export interface Product {
@@ -18,6 +19,11 @@ export interface Product {
   emoji: string;
   /** Products in the same group are equivalent (e.g. "arroz-branco") and compared by unit price. */
   group: string;
+  /** EAN/UPC barcode, unique across the catalog. */
+  barcode?: string | undefined;
+  /** Path of the real photo in the product-images storage bucket. */
+  imagePath?: string | undefined;
+  isDemo?: boolean | undefined;
 }
 
 export interface Price {

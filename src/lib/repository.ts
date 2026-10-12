@@ -1,45 +1,79 @@
+import { supabase } from "@/integrations/supabase/client";
 import { demoCatalog } from "./demo-data";
-import { catalogStore } from "./store";
-import type { Market, Offer, Price, Product } from "./types";
+import { IMAGE_BUCKET } from "./catalog-cloud";
+import type { Market, Product } from "./types";
 
-/**
- * All catalog writes go through this interface. Today it is backed by localStorage;
- * a future shared backend only needs another implementation with the same methods.
- */
-export interface CatalogRepository {
-  saveMarket(m: Market): void;
-  saveProduct(p: Product): void;
-  savePrice(p: Price): void;
-  saveOffer(o: Offer): void;
-  removeOffer(productId: string, marketId: string): void;
-  reset(): void;
+export interface SaveItemInput {
+  product: Product;
+  marketId: string;
+  price: number;
+  updatedAt: string;
+  offer: { id: string; price: number; validUntil: string } | null;
 }
 
-const upsert = <T,>(arr: T[], item: T, same: (a: T) => boolean) =>
-  arr.some(same) ? arr.map((a) => (same(a) ? item : a)) : [...arr, item];
+/**
+ * All catalog writes go through this interface. Backed by Lovable Cloud; database
+ * security rules decide who may write (market members / admin).
+ */
+export interface CatalogRepository {
+  saveMarket(m: Market, isNew: boolean): Promise<void>;
+  /** Product + price + offer saved atomically in the database. */
+  saveItem(input: SaveItemInput): Promise<void>;
+  uploadImage(productId: string, blob: Blob): Promise<string>;
+  removeImage(path: string): Promise<void>;
+  /** Admin only: restores demo records; real data is never touched. */
+  resetDemo(): Promise<void>;
+}
 
-export const localCatalogRepository: CatalogRepository = {
-  saveMarket: (m) => catalogStore.set((c) => ({ ...c, markets: upsert(c.markets, m, (x) => x.id === m.id) })),
-  saveProduct: (p) => catalogStore.set((c) => ({ ...c, products: upsert(c.products, p, (x) => x.id === p.id) })),
-  savePrice: (p) =>
-    catalogStore.set((c) => ({
-      ...c,
-      prices: upsert(c.prices, p, (x) => x.productId === p.productId && x.marketId === p.marketId),
-    })),
-  saveOffer: (o) =>
-    catalogStore.set((c) => ({
-      ...c,
-      offers: upsert(c.offers, o, (x) => x.productId === o.productId && x.marketId === o.marketId),
-    })),
-  removeOffer: (productId, marketId) =>
-    catalogStore.set((c) => ({
-      ...c,
-      offers: c.offers.filter((x) => !(x.productId === productId && x.marketId === marketId)),
-    })),
-  reset: () => catalogStore.set(demoCatalog),
+const fail = (e: { message: string; code?: string } | null) => {
+  if (!e) return;
+  if (e.code === "23505") throw new Error("Já existe um produto com este código de barras.");
+  if (e.code === "42501" || /row-level security|permission/i.test(e.message))
+    throw new Error("Você não tem permissão para esta alteração.");
+  throw new Error(e.message);
 };
 
-export const catalogRepo: CatalogRepository = localCatalogRepository;
+export const cloudCatalogRepository: CatalogRepository = {
+  async saveMarket(m, isNew) {
+    const row = { id: m.id, name: m.name, neighborhood: m.neighborhood, address: m.address };
+    const { error } = isNew
+      ? await supabase.from("markets").insert(row)
+      : await supabase.from("markets").update(row).eq("id", m.id);
+    fail(error);
+  },
+  async saveItem({ product, marketId, price, updatedAt, offer }) {
+    const { error } = await supabase.rpc("save_market_item", {
+      p_product: { ...product, barcode: product.barcode ?? "", imagePath: product.imagePath ?? "" },
+      p_market_id: marketId,
+      p_price: price,
+      p_updated_at: updatedAt,
+      p_offer_id: offer?.id ?? "",
+      p_offer_price: (offer?.price ?? null) as number,
+      p_valid_until: (offer?.validUntil ?? null) as string,
+    });
+    fail(error);
+  },
+  async uploadImage(productId, blob) {
+    const path = `${productId}/${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false });
+    fail(error);
+    return path;
+  },
+  async removeImage(path) {
+    await supabase.storage.from(IMAGE_BUCKET).remove([path]);
+  },
+  async resetDemo() {
+    const c = demoCatalog;
+    fail((await supabase.from("markets").upsert(c.markets.map((m) => ({ ...m, is_demo: true })))).error);
+    fail((await supabase.from("products").upsert(c.products.map((p) => ({
+      id: p.id, name: p.name, brand: p.brand, category: p.category, size: p.size, unit: p.unit, emoji: p.emoji, group_key: p.group, is_demo: true,
+    })))).error);
+    fail((await supabase.from("prices").upsert(c.prices.map((p) => ({ product_id: p.productId, market_id: p.marketId, price: p.price, updated_at: p.updatedAt })))).error);
+    fail((await supabase.from("offers").upsert(c.offers.map((o) => ({ id: o.id, product_id: o.productId, market_id: o.marketId, price: o.price, valid_until: o.validUntil })), { onConflict: "product_id,market_id" })).error);
+  },
+};
+
+export const catalogRepo: CatalogRepository = cloudCatalogRepository;
 
 export const newId = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 export const groupKey = (name: string) =>

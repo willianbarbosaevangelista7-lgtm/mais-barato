@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from "react";
-import { demoCatalog } from "./demo-data";
-import type { Catalog, ListItem } from "./types";
+import type { ListItem } from "./types";
 
-// Tiny localStorage-backed store. Swap the read/write functions for API calls to add a database later.
+// The catalog now lives in Lovable Cloud (see catalog-cloud.ts). The shopping list stays in this browser for now.
+export { useCatalog } from "./catalog-cloud";
+
 function createStore<T>(key: string, initial: T) {
   let state = initial;
   let loaded = false;
@@ -37,11 +38,8 @@ function createStore<T>(key: string, initial: T) {
   };
 }
 
-export const catalogStore = createStore<Catalog>("maisbarato:catalog:v2", demoCatalog);
 export const listStore = createStore<ListItem[]>("maisbarato:list:v1", []);
 
-export const useCatalog = () =>
-  useSyncExternalStore(catalogStore.subscribe, catalogStore.get, catalogStore.getServer);
 export const useList = () =>
   useSyncExternalStore(listStore.subscribe, listStore.get, listStore.getServer);
 

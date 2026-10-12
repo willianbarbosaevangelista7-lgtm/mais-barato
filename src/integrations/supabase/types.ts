@@ -14,16 +14,245 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      market_members: {
+        Row: {
+          market_id: string
+          user_id: string
+        }
+        Insert: {
+          market_id: string
+          user_id: string
+        }
+        Update: {
+          market_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_members_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      markets: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          is_demo: boolean
+          name: string
+          neighborhood: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          id: string
+          is_demo?: boolean
+          name: string
+          neighborhood?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          name?: string
+          neighborhood?: string
+        }
+        Relationships: []
+      }
+      offers: {
+        Row: {
+          id: string
+          market_id: string
+          price: number
+          product_id: string
+          valid_until: string
+        }
+        Insert: {
+          id: string
+          market_id: string
+          price: number
+          product_id: string
+          valid_until: string
+        }
+        Update: {
+          id?: string
+          market_id?: string
+          price?: number
+          product_id?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prices: {
+        Row: {
+          market_id: string
+          price: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          market_id: string
+          price: number
+          product_id: string
+          updated_at: string
+        }
+        Update: {
+          market_id?: string
+          price?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prices_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          barcode: string | null
+          brand: string
+          category: string
+          created_at: string
+          emoji: string
+          group_key: string
+          id: string
+          image_path: string | null
+          is_demo: boolean
+          name: string
+          size: number
+          unit: string
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string
+          category: string
+          created_at?: string
+          emoji?: string
+          group_key: string
+          id: string
+          image_path?: string | null
+          is_demo?: boolean
+          name: string
+          size: number
+          unit: string
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string
+          category?: string
+          created_at?: string
+          emoji?: string
+          group_key?: string
+          id?: string
+          image_path?: string | null
+          is_demo?: boolean
+          name?: string
+          size?: number
+          unit?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_manage_market: { Args: { _market_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_catalog_editor: { Args: never; Returns: boolean }
+      is_market_member: {
+        Args: { _market_id: string; _user_id: string }
+        Returns: boolean
+      }
+      save_market_item: {
+        Args: {
+          p_market_id: string
+          p_offer_id: string
+          p_offer_price: number
+          p_price: number
+          p_product: Json
+          p_updated_at: string
+          p_valid_until: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "market" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +379,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "market", "customer"],
+    },
   },
 } as const
