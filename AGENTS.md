@@ -8,4 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- All catalog writes go through `catalogRepo` (src/lib/repository.ts); swap its implementation to move from localStorage to a shared backend without touching pages.
+- All catalog writes go through `catalogRepo` (src/lib/repository.ts, Lovable Cloud); pages never write tables directly, so storage can change in one place.
+- Catalog reads use `useCatalog()` (TanStack Query, key ["catalog"]); invalidate that key after writes so every screen sees shared data.
+- Permissions live in database rules (user_roles, market_members, has_role/can_manage_market); UI checks are only cosmetic.
+- Product photos live in the private `product-images` bucket and are shown through signed URLs (workspace blocks public buckets).
+- The shopping list stays in localStorage for now; moving it to the account is pending.
