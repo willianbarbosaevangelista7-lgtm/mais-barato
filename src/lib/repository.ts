@@ -64,7 +64,7 @@ export const cloudCatalogRepository: CatalogRepository = {
   },
   async resetDemo() {
     const c = demoCatalog;
-    fail((await supabase.from("markets").upsert(c.markets.map((m) => ({ ...m, is_demo: true })))).error);
+    fail((await supabase.from("markets").upsert(c.markets.map((m) => ({ id: m.id, name: m.name, neighborhood: m.neighborhood, address: m.address, is_demo: true })))).error);
     fail((await supabase.from("products").upsert(c.products.map((p) => ({
       id: p.id, name: p.name, brand: p.brand, category: p.category, size: p.size, unit: p.unit, emoji: p.emoji, group_key: p.group, is_demo: true,
     })))).error);
