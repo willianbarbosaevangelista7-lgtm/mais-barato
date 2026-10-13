@@ -55,6 +55,7 @@ export function ProductCard({ p, prices }: { p: Product; prices: MarketPrice[] }
           <p className="text-sm text-muted-foreground">
             {p.brand} · {sizeLabel(p)}
           </p>
+          <BarcodeLabel p={p} />
           {best && (
             <p className="mt-1 text-sm">
               a partir de <strong className="text-lg text-primary">{brl(best.price)}</strong>

@@ -1,7 +1,34 @@
 import { Link } from "@tanstack/react-router";
-import { Home, Search, Scale, ListChecks, Store } from "lucide-react";
+import { Home, Search, Scale, ListChecks, Store, LogIn, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useList } from "@/lib/store";
+import { useCatalogQuery } from "@/lib/catalog-cloud";
+import { useSession } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+
+function AccountButton() {
+  const { user, ready } = useSession();
+  if (!ready) return null;
+  const cls = "inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted";
+  return user ? (
+    <button className={cls} onClick={() => supabase.auth.signOut()}><LogOut className="h-4 w-4" />Sair</button>
+  ) : (
+    <Link to="/auth" className={cls}><LogIn className="h-4 w-4" />Entrar</Link>
+  );
+}
+
+function CatalogStatus() {
+  const q = useCatalogQuery();
+  if (q.isLoading) return <p className="mb-3 text-center text-sm text-muted-foreground">Carregando preços…</p>;
+  if (q.isError)
+    return (
+      <p className="mb-3 rounded-xl border border-destructive p-3 text-sm text-destructive">
+        Não foi possível carregar os preços. Verifique sua conexão.{" "}
+        <button className="font-semibold underline" onClick={() => q.refetch()}>Tentar de novo</button>
+      </p>
+    );
+  return null;
+}
 
 const nav = [
   { to: "/", label: "Início", icon: Home },

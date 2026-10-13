@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Trophy } from "lucide-react";
 import { AppShell, PageTitle } from "@/components/AppShell";
-import { AddToListButton, ProductThumb } from "@/components/ProductCard";
+import { AddToListButton, BarcodeLabel, ProductThumb } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import { brl, fmtDate, pct, priceSummary, pricesFor, sizeLabel, unitPrice, comparable } from "@/lib/pricing";
 
@@ -65,6 +65,7 @@ function Detail({ productId }: { productId: string }) {
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold leading-tight">{p.name}</h2>
           <p className="text-sm text-muted-foreground">{p.brand} · {sizeLabel(p)} · {p.category}</p>
+          <BarcodeLabel p={p} />
         </div>
       </div>
 
