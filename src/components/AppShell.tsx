@@ -62,13 +62,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {n.to === "/lista" && count > 0 && ` (${count})`}
               </Link>
             ))}
+            <AccountButton />
           </nav>
+          <div className="md:hidden"><AccountButton /></div>
         </div>
       </header>
       <div className="bg-warning px-4 py-1.5 text-center text-xs font-medium text-warning-foreground">
         Versão de teste: mercados, preços e ofertas são <strong>fictícios</strong>, apenas para demonstração.
       </div>
-      <main className="mx-auto max-w-5xl px-4 py-5">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-5"><CatalogStatus />{children}</main>
       <nav
         aria-label="Navegação principal"
         className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
