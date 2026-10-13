@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Pencil, ScanBarcode } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { PhotoPicker, type PhotoState } from "@/components/PhotoPicker";
+import { AdminPanel } from "@/components/AdminPanel";
+import { useAccess } from "@/lib/auth";
+import { barcodeError } from "@/lib/barcode";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { categories } from "@/lib/demo-data";
 import { useCatalog } from "@/lib/store";
@@ -43,21 +50,30 @@ type ItemForm = {
   productId?: string | undefined;
   name: string; brand: string; category: string; size: string; unit: Unit;
   price: string; updatedAt: string; hasOffer: boolean; offerPrice: string; validUntil: string;
+  barcode: string; photo: PhotoState;
 };
 const emptyItem = (): ItemForm => ({
   name: "", brand: "", category: categories[0]!, size: "", unit: "kg",
   price: "", updatedAt: todayISO(), hasOffer: false, offerPrice: "", validUntil: "",
+  barcode: "", photo: {},
 });
 const money = (v: number) => v.toFixed(2).replace(".", ",");
 
 function Supermercados() {
-  const catalog = useCatalog();
-  const [marketId, setMarketId] = useState(catalog.markets[0]?.id ?? "");
+  const all = useCatalog();
+  const access = useAccess();
+  const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: ["catalog"] });
+  const [busy, setBusy] = useState(false);
+  const [scan, setScan] = useState(false);
+  const myMarkets = access.isAdmin ? all.markets : all.markets.filter((m) => access.marketIds.includes(m.id));
+  const catalog = { ...all, markets: myMarkets };
+  const [marketId, setMarketId] = useState("");
   const market = catalog.markets.find((m) => m.id === marketId) ?? catalog.markets[0];
   const [mf, setMf] = useState<MarketForm | null>(null);
   const [it, setIt] = useState<ItemForm>(emptyItem);
 
-  const saveMarket = (e: FormEvent) => {
+  const saveMarket = async (e: FormEvent) => {
     e.preventDefault();
     if (!mf) return;
     const name = mf.name.trim();
@@ -65,10 +81,14 @@ function Supermercados() {
     if (name.length < 2) return void toast.error("Informe o nome do supermercado.");
     if (!neighborhood) return void toast.error("Informe o bairro.");
     const id = mf.id ?? newId("m");
-    catalogRepo.saveMarket({ id, name, neighborhood, address: mf.address.trim() });
-    setMarketId(id);
-    setMf(null);
-    toast.success(mf.id ? "Supermercado atualizado" : "Supermercado cadastrado");
+    setBusy(true);
+    try {
+      await catalogRepo.saveMarket({ id, name, neighborhood, address: mf.address.trim() }, !mf.id);
+      await refresh();
+      setMarketId(id);
+      setMf(null);
+      toast.success(mf.id ? "Supermercado atualizado" : "Supermercado cadastrado");
+    } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
   };
 
   const editItem = (productId: string) => {
@@ -80,11 +100,12 @@ function Supermercados() {
       productId, name: p.name, brand: p.brand, category: p.category, size: String(p.size), unit: p.unit,
       price: pr ? money(pr.price) : "", updatedAt: pr?.updatedAt ?? todayISO(),
       hasOffer: !!o, offerPrice: o ? money(o.price) : "", validUntil: o?.validUntil ?? "",
+      barcode: p.barcode ?? "", photo: { path: p.imagePath },
     });
     document.getElementById("form-produto")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const saveItem = (e: FormEvent) => {
+  const saveItem = async (e: FormEvent) => {
     e.preventDefault();
     if (!market) return void toast.error("Cadastre um supermercado primeiro.");
     const name = it.name.trim();
@@ -100,29 +121,76 @@ function Supermercados() {
       if (!(offerPrice > 0) || offerPrice >= price) return void toast.error(`O preço da oferta deve ser menor que ${brl(price)}.`);
       if (!it.validUntil || it.validUntil < todayISO()) return void toast.error("A validade da oferta deve ser hoje ou depois.");
     }
+    const barcode = it.barcode.trim();
+    const bErr = barcodeError(barcode);
+    if (bErr) return void toast.error(bErr);
+    const dup = barcode ? all.products.find((p) => p.barcode === barcode && p.id !== it.productId) : undefined;
+    if (dup) return void toast.error(`Este código já pertence a "${dup.name} (${dup.brand})". Use o botão "Usar este produto".`);
     const brand = it.brand.trim() || "Sem marca";
     // Same name + brand + size + unit = same product (prices are attached to it per market).
     const existing = it.productId
       ? catalog.products.find((p) => p.id === it.productId)
-      : catalog.products.find((p) => groupKey(p.name) === groupKey(name) && groupKey(p.brand) === groupKey(brand) && p.size === size && p.unit === it.unit);
+      : all.products.find((p) => !p.barcode && groupKey(p.name) === groupKey(name) && groupKey(p.brand) === groupKey(brand) && p.size === size && p.unit === it.unit);
     const productId = existing?.id ?? newId("p");
-    catalogRepo.saveProduct({
-      id: productId, name, brand, category: it.category, size, unit: it.unit,
-      emoji: existing?.emoji ?? "🛒", group: existing?.group ?? groupKey(name),
-    });
-    catalogRepo.savePrice({ productId, marketId: market.id, price, updatedAt: it.updatedAt });
-    if (it.hasOffer) catalogRepo.saveOffer({ id: newId("o"), productId, marketId: market.id, price: offerPrice, validUntil: it.validUntil });
-    else catalogRepo.removeOffer(productId, market.id);
-    toast.success(it.productId || existing ? "Produto e preço atualizados" : "Produto cadastrado");
-    setIt(emptyItem());
+    setBusy(true);
+    let uploaded: string | undefined;
+    try {
+      const old = existing?.imagePath;
+      let imagePath = it.photo.removed ? undefined : old;
+      if (it.photo.pending) imagePath = uploaded = await catalogRepo.uploadImage(productId, it.photo.pending);
+      await catalogRepo.saveItem({
+        product: {
+          id: productId, name, brand, category: it.category, size, unit: it.unit,
+          emoji: existing?.emoji ?? "🛒", group: existing?.group ?? groupKey(name),
+          barcode: barcode || undefined, imagePath,
+        },
+        marketId: market.id, price, updatedAt: it.updatedAt,
+        offer: it.hasOffer ? { id: newId("o"), price: offerPrice, validUntil: it.validUntil } : null,
+      });
+      if (old && old !== imagePath) void catalogRepo.removeImage(old);
+      await refresh();
+      toast.success(it.productId || existing ? "Produto e preço atualizados" : "Produto cadastrado");
+      setIt(emptyItem());
+    } catch (err) {
+      if (uploaded) void catalogRepo.removeImage(uploaded);
+      toast.error((err as Error).message);
+    } finally { setBusy(false); }
   };
 
   const set = (patch: Partial<ItemForm>) => setIt((s) => ({ ...s, ...patch }));
   const myPrices = market ? catalog.prices.filter((p) => p.marketId === market.id) : [];
 
+  const dupBarcode = it.barcode.length >= 8 ? all.products.find((p) => p.barcode === it.barcode && p.id !== it.productId) : undefined;
+  const title = <PageTitle title="Área dos supermercados" subtitle="Os dados ficam no banco compartilhado e aparecem para todos. Não há integração automática com mercados." />;
+
+  if (!access.ready) return <AppShell>{title}<p className="text-sm text-muted-foreground">Verificando acesso…</p></AppShell>;
+  if (!access.user)
+    return (
+      <AppShell>{title}
+        <Card title="Acesso de supermercados">
+          <p className="mb-3 text-sm text-muted-foreground">Entre na sua conta para cadastrar produtos, preços e ofertas do seu mercado.</p>
+          <Link to="/auth" className={`${btn} grid place-items-center`}>Entrar</Link>
+        </Card>
+      </AppShell>
+    );
+  if (!access.isAdmin && !myMarkets.length)
+    return (
+      <AppShell>{title}
+        <Card title="Conta ainda não ligada a um mercado">
+          <p className="text-sm text-muted-foreground">Sua conta ({access.user.email}) é de cliente. Peça ao administrador do MaisBarato para ligá-la ao seu supermercado.</p>
+        </Card>
+      </AppShell>
+    );
+
   return (
     <AppShell>
-      <PageTitle title="Área dos supermercados" subtitle="Demonstração: os dados ficam salvos apenas neste navegador. Não há integração real com mercados nem atualização automática." />
+      {title}
+      {scan && (
+        <BarcodeScanner
+          onClose={() => setScan(false)}
+          onDetected={(code) => { setScan(false); set({ barcode: code }); toast.success(`Código lido: ${code}`); }}
+        />
+      )}
 
       <Card title="Supermercado">
         {mf ? (
@@ -132,7 +200,7 @@ function Supermercados() {
             <L label="Endereço comercial (opcional)"><input className={field} value={mf.address} onChange={(e) => setMf({ ...mf, address: e.target.value })} placeholder="Rua, número" /></L>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" className={btn2} onClick={() => setMf(null)}>Cancelar</button>
-              <button className={btn}>Salvar</button>
+              <button disabled={busy} className={btn}>Salvar</button>
             </div>
           </form>
         ) : (
@@ -149,7 +217,7 @@ function Supermercados() {
             )}
             <div className="grid grid-cols-2 gap-2">
               {market && <button className={btn2} onClick={() => setMf({ ...market })}>Editar mercado</button>}
-              <button className={btn2} onClick={() => setMf({ name: "", neighborhood: "", address: "" })}>Novo mercado</button>
+              {access.isAdmin && <button className={btn2} onClick={() => setMf({ name: "", neighborhood: "", address: "" })}>Novo mercado</button>}
             </div>
           </div>
         )}
@@ -159,6 +227,20 @@ function Supermercados() {
         <div id="form-produto" className="scroll-mt-20">
           <Card title={it.productId ? "Editar produto e preço" : "Cadastrar produto e preço"}>
             <form onSubmit={saveItem} className="space-y-2">
+              <L label="Código de barras (EAN/UPC)">
+                <div className="flex gap-2">
+                  <input className={field} inputMode="numeric" value={it.barcode} onChange={(e) => set({ barcode: e.target.value.replace(/\D/g, "").slice(0, 14) })} placeholder="Digite ou escaneie" />
+                  <button type="button" onClick={() => setScan(true)} aria-label="Escanear código de barras" className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl border border-border px-3 text-sm font-semibold hover:bg-muted">
+                    <ScanBarcode className="h-5 w-5" /><span className="hidden sm:inline">Escanear código de barras</span>
+                  </button>
+                </div>
+              </L>
+              {dupBarcode && (
+                <div className="rounded-xl bg-secondary p-3 text-sm">
+                  Já existe um produto com este código: <strong>{dupBarcode.name}</strong> ({dupBarcode.brand} · {sizeLabel(dupBarcode)}).
+                  <button type="button" className="mt-2 block font-semibold text-primary underline" onClick={() => editItem(dupBarcode.id)}>Usar este produto</button>
+                </div>
+              )}
               <L label="Nome do produto"><input className={field} value={it.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Macarrão espaguete" /></L>
               <L label="Marca"><input className={field} value={it.brand} onChange={(e) => set({ brand: e.target.value })} /></L>
               <L label="Categoria">
@@ -188,9 +270,10 @@ function Supermercados() {
                   <L label="Válida até"><input type="date" min={todayISO()} className={field} value={it.validUntil} onChange={(e) => set({ validUntil: e.target.value })} /></L>
                 </div>
               )}
+              <PhotoPicker value={it.photo} onChange={(photo) => set({ photo })} />
               <div className={`grid gap-2 ${it.productId ? "grid-cols-2" : ""}`}>
                 {it.productId && <button type="button" className={btn2} onClick={() => setIt(emptyItem())}>Cancelar</button>}
-                <button className={btn}>{it.productId ? "Salvar alterações" : "Cadastrar"}</button>
+                <button disabled={busy} className={`${btn} disabled:opacity-60`}>{busy ? "Salvando…" : it.productId ? "Salvar alterações" : "Cadastrar"}</button>
               </div>
             </form>
           </Card>
@@ -223,12 +306,18 @@ function Supermercados() {
         </Card>
       </div>
 
-      <button
-        className="mt-4 text-sm font-semibold text-destructive"
-        onClick={() => { catalogRepo.reset(); setMarketId("m1"); setIt(emptyItem()); toast.success("Dados de demonstração restaurados"); }}
-      >
-        Restaurar dados de demonstração
-      </button>
+      {access.isAdmin && <AdminPanel markets={all.markets} />}
+      {access.isAdmin && (
+        <button
+          className="mt-4 text-sm font-semibold text-destructive"
+          onClick={async () => {
+            try { await catalogRepo.resetDemo(); await refresh(); setIt(emptyItem()); toast.success("Dados de demonstração restaurados (dados reais não foram alterados)"); }
+            catch (err) { toast.error((err as Error).message); }
+          }}
+        >
+          Restaurar dados de demonstração
+        </button>
+      )}
     </AppShell>
   );
 }

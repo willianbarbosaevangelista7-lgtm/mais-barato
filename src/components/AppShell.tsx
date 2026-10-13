@@ -1,7 +1,34 @@
 import { Link } from "@tanstack/react-router";
-import { Home, Search, Scale, ListChecks, Store } from "lucide-react";
+import { Home, Search, Scale, ListChecks, Store, LogIn, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useList } from "@/lib/store";
+import { useCatalogQuery } from "@/lib/catalog-cloud";
+import { useSession } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+
+function AccountButton() {
+  const { user, ready } = useSession();
+  if (!ready) return null;
+  const cls = "inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted";
+  return user ? (
+    <button className={cls} onClick={() => supabase.auth.signOut()}><LogOut className="h-4 w-4" />Sair</button>
+  ) : (
+    <Link to="/auth" className={cls}><LogIn className="h-4 w-4" />Entrar</Link>
+  );
+}
+
+function CatalogStatus() {
+  const q = useCatalogQuery();
+  if (q.isLoading) return <p className="mb-3 text-center text-sm text-muted-foreground">Carregando preços…</p>;
+  if (q.isError)
+    return (
+      <p className="mb-3 rounded-xl border border-destructive p-3 text-sm text-destructive">
+        Não foi possível carregar os preços. Verifique sua conexão.{" "}
+        <button className="font-semibold underline" onClick={() => q.refetch()}>Tentar de novo</button>
+      </p>
+    );
+  return null;
+}
 
 const nav = [
   { to: "/", label: "Início", icon: Home },
@@ -35,13 +62,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {n.to === "/lista" && count > 0 && ` (${count})`}
               </Link>
             ))}
+            <AccountButton />
           </nav>
+          <div className="md:hidden"><AccountButton /></div>
         </div>
       </header>
       <div className="bg-warning px-4 py-1.5 text-center text-xs font-medium text-warning-foreground">
         Versão de teste: mercados, preços e ofertas são <strong>fictícios</strong>, apenas para demonstração.
       </div>
-      <main className="mx-auto max-w-5xl px-4 py-5">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-5"><CatalogStatus />{children}</main>
       <nav
         aria-label="Navegação principal"
         className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden"

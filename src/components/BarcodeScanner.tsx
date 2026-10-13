@@ -33,7 +33,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         const controls = await reader.decodeFromConstraints(
           { video: { facingMode: { ideal: "environment" } }, audio: false },
           videoRef.current,
-          (result) => {
+          (result: { getText(): string } | undefined) => {
             if (result && !cancelled) {
               cancelled = true;
               controls.stop();
