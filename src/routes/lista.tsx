@@ -39,7 +39,7 @@ function Lista() {
 
   return (
     <AppShell>
-      <PageTitle title="Lista de compras" subtitle="Salva neste navegador. Valores com base em preços fictícios." />
+      <PageTitle title="Lista de compras" subtitle="Salva neste navegador e, se você entrar, na sua conta. Valores com base em preços fictícios." />
       <div className="grid gap-5 md:grid-cols-[1fr_320px]">
         <ul className="space-y-2">
           {a.rows.map(({ item, product: p, best }) => (
