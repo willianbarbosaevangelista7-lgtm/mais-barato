@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BuscaRouteImport } from './routes/busca'
 import { Route as CompararRouteImport } from './routes/comparar'
 import { Route as ListaRouteImport } from './routes/lista'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SupermercadosRouteImport } from './routes/supermercados'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const ListaRoute = ListaRouteImport.update({
   path: '/lista',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SupermercadosRoute = SupermercadosRouteImport.update({
   id: '/supermercados',
   path: '/supermercados',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/busca': typeof BuscaRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/busca': typeof BuscaRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRoutesById {
@@ -70,14 +78,28 @@ export interface FileRoutesById {
   '/busca': typeof BuscaRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/supermercados': typeof SupermercadosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/busca' | '/comparar' | '/lista' | '/supermercados'
+    | '/'
+    | '/auth'
+    | '/busca'
+    | '/comparar'
+    | '/lista'
+    | '/reset-password'
+    | '/supermercados'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/busca' | '/comparar' | '/lista' | '/supermercados'
+  to:
+    | '/'
+    | '/auth'
+    | '/busca'
+    | '/comparar'
+    | '/lista'
+    | '/reset-password'
+    | '/supermercados'
   id:
     | '__root__'
     | '/'
@@ -85,6 +107,7 @@ export interface FileRouteTypes {
     | '/busca'
     | '/comparar'
     | '/lista'
+    | '/reset-password'
     | '/supermercados'
   fileRoutesById: FileRoutesById
 }
@@ -94,6 +117,7 @@ export interface RootRouteChildren {
   BuscaRoute: typeof BuscaRoute
   CompararRoute: typeof CompararRoute
   ListaRoute: typeof ListaRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SupermercadosRoute: typeof SupermercadosRoute
 }
 
@@ -134,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/supermercados': {
       id: '/supermercados'
       path: '/supermercados'
@@ -150,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuscaRoute: BuscaRoute,
   CompararRoute: CompararRoute,
   ListaRoute: ListaRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SupermercadosRoute: SupermercadosRoute,
 }
 export const routeTree = rootRouteImport
