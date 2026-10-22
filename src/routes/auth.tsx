@@ -50,6 +50,13 @@ function AuthPage() {
     }
   };
 
+  const forgot = async () => {
+    if (!email) return void toast.error("Digite seu e-mail acima primeiro.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    if (error) toast.error("Não foi possível enviar o e-mail. Tente mais tarde.");
+    else toast.success("Se o e-mail tiver conta, enviamos um link para criar nova senha.");
+  };
+
   const google = async () => {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) toast.error("Não foi possível entrar com o Google.");
@@ -71,6 +78,10 @@ function AuthPage() {
         <button className="mt-3 w-full text-sm font-semibold text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Criar conta" : "Já tem conta? Entrar"}
         </button>
+        {mode === "in" && (
+          <button className="mt-2 w-full text-xs text-muted-foreground underline" onClick={forgot}>Esqueci minha senha</button>
+        )}
+        <p className="mt-3 text-center text-xs text-muted-foreground">Toda conta nova é de cliente. O acesso de supermercado é liberado pelo administrador.</p>
       </div>
     </AppShell>
   );
