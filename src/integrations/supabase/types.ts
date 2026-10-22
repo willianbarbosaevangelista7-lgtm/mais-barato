@@ -202,6 +202,38 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_list_items: {
+        Row: {
+          bought: boolean
+          product_id: string
+          qty: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bought?: boolean
+          product_id: string
+          qty?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          bought?: boolean
+          product_id?: string
+          qty?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
