@@ -257,6 +257,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_edit_product: { Args: { _product_id: string }; Returns: boolean }
       can_manage_market: { Args: { _market_id: string }; Returns: boolean }
       has_role: {
         Args: {

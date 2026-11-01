@@ -10,7 +10,8 @@
 <!-- LOVABLE:END -->
 - All catalog writes go through `catalogRepo` (src/lib/repository.ts, Lovable Cloud); pages never write tables directly, so storage can change in one place.
 - Catalog reads use `useCatalog()` (TanStack Query, key ["catalog"]); invalidate that key after writes so every screen sees shared data.
-- Permissions live in database rules (user_roles, market_members, has_role/can_manage_market); UI checks are only cosmetic.
+- Permissions live in database rules (user_roles, market_members, has_role/can_manage_market/can_edit_product); UI checks are only cosmetic.
+- Shared product fields (name, brand, photo) are editable only by admins or markets that already sell the product — enforced by `can_edit_product` in RLS, the `save_market_item` function and the image-storage policies.
 - Product photos live in the private `product-images` bucket and are shown through signed URLs (workspace blocks public buckets).
 - The shopping list stays in localStorage for now; moving it to the account is pending.
 - Shopping list syncs through src/lib/list-sync.ts (localStorage is the working copy, pushed to shopping_list_items when signed in); keeps screens unchanged.

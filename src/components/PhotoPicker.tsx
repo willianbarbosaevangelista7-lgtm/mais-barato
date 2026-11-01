@@ -23,7 +23,7 @@ export async function compressImage(file: File): Promise<Blob> {
 
 export type PhotoState = { path?: string | undefined; pending?: Blob | undefined; removed?: boolean | undefined };
 
-export function PhotoPicker({ value, onChange }: { value: PhotoState; onChange: (v: PhotoState) => void }) {
+export function PhotoPicker({ value, onChange, disabled }: { value: PhotoState; onChange: (v: PhotoState) => void; disabled?: boolean | undefined }) {
   const camRef = useRef<HTMLInputElement>(null);
   const galRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Blob | null>(null);
@@ -58,7 +58,7 @@ export function PhotoPicker({ value, onChange }: { value: PhotoState; onChange: 
       {url && (
         <img src={url} alt="Prévia da foto do produto" className="mx-auto mt-2 max-h-48 w-auto rounded-lg object-contain" />
       )}
-      {draft ? (
+      {disabled ? null : draft ? (
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button type="button" className={btn} onClick={() => setDraft(null)}>Cancelar</button>
           <button
