@@ -15,6 +15,13 @@
       "when": 1792691752205,
       "tag": "0001_shopping_list_items",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793570083173,
+      "tag": "0002_restrict_product_field_edits",
+      "breakpoints": true
     }
   ]
 }
