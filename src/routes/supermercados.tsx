@@ -159,6 +159,11 @@ function Supermercados() {
 
   const set = (patch: Partial<ItemForm>) => setIt((s) => ({ ...s, ...patch }));
   const myPrices = market ? catalog.prices.filter((p) => p.marketId === market.id) : [];
+  // Shared product fields (name, brand, photo) are editable only by markets that sell the product
+  // (or admins). The database enforces this; the UI only reflects it.
+  const canEditShared =
+    !it.productId || access.isAdmin ||
+    all.prices.some((pr) => pr.productId === it.productId && access.marketIds.includes(pr.marketId));
 
   const dupBarcode = it.barcode.length >= 8 ? all.products.find((p) => p.barcode === it.barcode && p.id !== it.productId) : undefined;
   const title = <PageTitle title="Área dos supermercados" subtitle="Os dados ficam no banco compartilhado e aparecem para todos. Não há integração automática com mercados." />;
@@ -241,8 +246,13 @@ function Supermercados() {
                   <button type="button" className="mt-2 block font-semibold text-primary underline" onClick={() => editItem(dupBarcode.id)}>Usar este produto</button>
                 </div>
               )}
-              <L label="Nome do produto"><input className={field} value={it.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Macarrão espaguete" /></L>
-              <L label="Marca"><input className={field} value={it.brand} onChange={(e) => set({ brand: e.target.value })} /></L>
+              {it.productId && !canEditShared && (
+                <p className="rounded-xl bg-secondary p-3 text-sm">
+                  Nome, marca e foto deste produto só podem ser alterados pelos mercados que o vendem. Você pode cadastrar o preço e a oferta do seu mercado.
+                </p>
+              )}
+              <L label="Nome do produto"><input className={field} disabled={!canEditShared} value={it.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Macarrão espaguete" /></L>
+              <L label="Marca"><input className={field} disabled={!canEditShared} value={it.brand} onChange={(e) => set({ brand: e.target.value })} /></L>
               <L label="Categoria">
                 <select className={field} value={it.category} onChange={(e) => set({ category: e.target.value })}>
                   {categories.map((c) => <option key={c}>{c}</option>)}
@@ -270,7 +280,7 @@ function Supermercados() {
                   <L label="Válida até"><input type="date" min={todayISO()} className={field} value={it.validUntil} onChange={(e) => set({ validUntil: e.target.value })} /></L>
                 </div>
               )}
-              <PhotoPicker value={it.photo} onChange={(photo) => set({ photo })} />
+              <PhotoPicker value={it.photo} onChange={(photo) => set({ photo })} disabled={!canEditShared} />
               <div className={`grid gap-2 ${it.productId ? "grid-cols-2" : ""}`}>
                 {it.productId && <button type="button" className={btn2} onClick={() => setIt(emptyItem())}>Cancelar</button>}
                 <button disabled={busy} className={`${btn} disabled:opacity-60`}>{busy ? "Salvando…" : it.productId ? "Salvar alterações" : "Cadastrar"}</button>
