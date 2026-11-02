@@ -9,6 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - All catalog writes go through `catalogRepo` (src/lib/repository.ts, Lovable Cloud); pages never write tables directly, so storage can change in one place.
+- Category choices and sector grouping come from `src/lib/categories.ts` in both search and product forms; retain existing category values to preserve saved catalog filters.
 - Catalog reads use `useCatalog()` (TanStack Query, key ["catalog"]); invalidate that key after writes so every screen sees shared data.
 - Permissions live in database rules (user_roles, market_members, has_role/can_manage_market/can_edit_product); UI checks are only cosmetic.
 - Shared product fields (name, brand, photo) are editable only by admins or markets that already sell the product — enforced by `can_edit_product` in RLS, the `save_market_item` function and the image-storage policies.

@@ -10,7 +10,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { useAccess } from "@/lib/auth";
 import { barcodeError } from "@/lib/barcode";
 import { AppShell, PageTitle } from "@/components/AppShell";
-import { categories } from "@/lib/demo-data";
+import { categories, categorySectors } from "@/lib/categories";
 import { useCatalog } from "@/lib/store";
 import { catalogRepo, groupKey, newId } from "@/lib/repository";
 import { brl, fmtDate, parseMoney, sizeLabel, todayISO } from "@/lib/pricing";
@@ -53,7 +53,7 @@ type ItemForm = {
   barcode: string; photo: PhotoState;
 };
 const emptyItem = (): ItemForm => ({
-  name: "", brand: "", category: categories[0]!, size: "", unit: "kg",
+   name: "", brand: "", category: categories[0] ?? "Mercearia", size: "", unit: "kg",
   price: "", updatedAt: todayISO(), hasOffer: false, offerPrice: "", validUntil: "",
   barcode: "", photo: {},
 });
@@ -255,7 +255,11 @@ function Supermercados() {
               <L label="Marca"><input className={field} disabled={!canEditShared} value={it.brand} onChange={(e) => set({ brand: e.target.value })} /></L>
               <L label="Categoria">
                 <select className={field} value={it.category} onChange={(e) => set({ category: e.target.value })}>
-                  {categories.map((c) => <option key={c}>{c}</option>)}
+                   {categorySectors.map((sector) => (
+                     <optgroup key={sector.name} label={sector.name}>
+                       {sector.categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                     </optgroup>
+                   ))}
                 </select>
               </L>
               <div className="grid grid-cols-2 gap-2">

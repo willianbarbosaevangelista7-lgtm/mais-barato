@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { ProductCard } from "@/components/ProductCard";
-import { categories } from "@/lib/demo-data";
+import { categorySectors } from "@/lib/categories";
 import { useCatalog } from "@/lib/store";
 import { pricesFor } from "@/lib/pricing";
 
@@ -64,7 +64,11 @@ function Busca() {
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <select aria-label="Categoria" className={sel} value={cat} onChange={(e) => set({ cat: e.target.value || undefined })}>
           <option value="">Todas categorias</option>
-          {categories.map((c) => <option key={c}>{c}</option>)}
+          {categorySectors.map((sector) => (
+            <optgroup key={sector.name} label={sector.name}>
+              {sector.categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </optgroup>
+          ))}
         </select>
         <select aria-label="Mercado" className={sel} value={market} onChange={(e) => set({ market: e.target.value || undefined })}>
           <option value="">Todos mercados</option>

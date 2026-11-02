@@ -63,4 +63,4 @@ demoCatalog.offers = [
   { id: "o3", productId: "p11", marketId: "m1", price: 4.99, validUntil: "2026-12-31" },
 ];
 
-export const categories = ["Mercearia", "Laticínios", "Hortifrúti", "Limpeza", "Higiene", "Padaria"];
+export { categories } from "./categories";
