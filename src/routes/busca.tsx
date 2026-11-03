@@ -36,9 +36,14 @@ function Busca() {
   const catalog = useCatalog();
   const set = (patch: Partial<S>) => navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
 
+  const activeSector = cat
+    ? categorySectors.find((s) => s.categories.includes(cat))?.name
+    : sectorParam;
+  const sectorCats = categorySectors.find((s) => s.name === activeSector)?.categories;
+
   const results = catalog.products
     .filter((p) => !q || normalize(`${p.name} ${p.brand} ${p.category}`).includes(normalize(q)))
-    .filter((p) => !cat || p.category === cat)
+    .filter((p) => (cat ? p.category === cat : !sectorCats || sectorCats.includes(p.category)))
     .map((p) => {
       let prices = pricesFor(catalog, p.id);
       if (market) prices = prices.filter((x) => x.marketId === market);
