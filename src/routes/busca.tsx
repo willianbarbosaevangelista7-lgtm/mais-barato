@@ -6,12 +6,13 @@ import { categorySectors } from "@/lib/categories";
 import { useCatalog } from "@/lib/store";
 import { pricesFor } from "@/lib/pricing";
 
-type S = { q?: string | undefined; cat?: string | undefined; market?: string | undefined; sort?: string | undefined };
+type S = { q?: string | undefined; cat?: string | undefined; sector?: string | undefined; market?: string | undefined; sort?: string | undefined };
 
 export const Route = createFileRoute("/busca")({
   validateSearch: (s: Record<string, unknown>): S => ({
     q: typeof s["q"] === "string" ? s["q"] : undefined,
     cat: typeof s["cat"] === "string" ? s["cat"] : undefined,
+    sector: typeof s["sector"] === "string" ? s["sector"] : undefined,
     market: typeof s["market"] === "string" ? s["market"] : undefined,
     sort: typeof s["sort"] === "string" ? s["sort"] : undefined,
   }),
@@ -30,6 +31,7 @@ const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, 
 
 function Busca() {
   const { q = "", cat = "", market = "", sort = "menor" } = Route.useSearch();
+  const { sector: sectorParam } = Route.useSearch();
   const navigate = useNavigate({ from: "/busca" });
   const catalog = useCatalog();
   const set = (patch: Partial<S>) => navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
