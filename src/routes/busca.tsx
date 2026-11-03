@@ -68,14 +68,47 @@ function Busca() {
           className="h-12 w-full rounded-xl border border-input bg-card pl-10 pr-3 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
+      <div className="-mx-4 mt-3 overflow-x-auto px-4 pb-1" role="group" aria-label="Explorar por setor">
+        <div className="flex w-max gap-2">
+          <button
+            type="button"
+            aria-pressed={!activeSector}
+            onClick={() => set({ sector: undefined, cat: undefined })}
+            className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              !activeSector ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted"
+            }`}
+          >
+            Tudo
+          </button>
+          {categorySectors.map((sector) => (
+            <button
+              key={sector.name}
+              type="button"
+              aria-pressed={activeSector === sector.name}
+              onClick={() => set({ sector: sector.name, cat: undefined })}
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+                activeSector === sector.name
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-muted"
+              }`}
+            >
+              {sector.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <select aria-label="Categoria" className={sel} value={cat} onChange={(e) => set({ cat: e.target.value || undefined })}>
-          <option value="">Todas categorias</option>
-          {categorySectors.map((sector) => (
-            <optgroup key={sector.name} label={sector.name}>
-              {sector.categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-          ))}
+          <option value="">{sectorCats ? "Todas as categorias do setor" : "Todas categorias"}</option>
+          {sectorCats ? (
+            sectorCats.map((c) => <option key={c} value={c}>{c}</option>)
+          ) : (
+            categorySectors.map((sector) => (
+              <optgroup key={sector.name} label={sector.name}>
+                {sector.categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </optgroup>
+            ))
+          )}
         </select>
         <select aria-label="Mercado" className={sel} value={market} onChange={(e) => set({ market: e.target.value || undefined })}>
           <option value="">Todos mercados</option>
