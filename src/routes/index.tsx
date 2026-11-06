@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Search, ListChecks, Store, Info } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { PhotoSearch } from "@/components/PhotoSearch";
 import { ProductThumb } from "@/components/ProductCard";
 import { useCatalog, useList } from "@/lib/store";
 import { brl, fmtDate, pricesFor, todayISO } from "@/lib/pricing";
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Compare preços de produtos de supermercado e economize na sua lista de compras." },
       { property: "og:title", content: "MaisBarato — Compare preços de supermercado" },
       { property: "og:description", content: "Compare preços e economize nas compras do mês." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,
@@ -50,6 +53,7 @@ function Home() {
             <Search className="h-5 w-5" />
           </button>
         </form>
+        <PhotoSearch onSearch={(query) => { void navigate({ to: "/busca", search: { q: query } }); }} />
       </section>
 
       <Link to="/lista" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">

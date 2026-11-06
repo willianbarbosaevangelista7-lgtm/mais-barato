@@ -16,3 +16,4 @@
 - Product photos live in the private `product-images` bucket and are shown through signed URLs (workspace blocks public buckets).
 - The shopping list stays in localStorage for now; moving it to the account is pending.
 - Shopping list syncs through src/lib/list-sync.ts (localStorage is the working copy, pushed to shopping_list_items when signed in); keeps screens unchanged.
+- Photo searches use a bounded server function with the AI Gateway; photos are transient inputs and never modify the catalog or its stored images.

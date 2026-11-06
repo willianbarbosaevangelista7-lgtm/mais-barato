@@ -12,7 +12,9 @@ export async function compressImage(file: File): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bmp.width * scale);
   canvas.height = Math.round(bmp.height * scale);
-  canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext("2d");
+  if (!context) { bmp.close(); throw new Error("Falha ao processar a imagem."); }
+  context.drawImage(bmp, 0, 0, canvas.width, canvas.height);
   bmp.close();
   for (const q of [0.82, 0.7, 0.6]) {
     const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", q));

@@ -4,4 +4,5 @@
 - [x] Product photos (camera/gallery, preview, replace/remove, compression)
 - [x] Shopping list synced to the account
 - [x] Password reset
+- [x] Product search by camera photo with preview and AI identification
 - [ ] Manual tests on an Android phone (camera, photos) — needs the user

@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
+import { useState } from "react";
+import { PhotoSearch } from "@/components/PhotoSearch";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { ProductCard } from "@/components/ProductCard";
 import { categorySectors } from "@/lib/categories";
@@ -22,6 +24,8 @@ export const Route = createFileRoute("/busca")({
       { name: "description", content: "Busque produtos e veja preços em diferentes supermercados." },
       { property: "og:title", content: "Buscar produtos — MaisBarato" },
       { property: "og:description", content: "Filtre por mercado e categoria e ordene pelo menor preço." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Busca,
@@ -34,6 +38,7 @@ function Busca() {
   const { sector: sectorParam } = Route.useSearch();
   const navigate = useNavigate({ from: "/busca" });
   const catalog = useCatalog();
+  const [photoLabel, setPhotoLabel] = useState("");
   const set = (patch: Partial<S>) => navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
 
   const activeSector = cat
@@ -68,6 +73,11 @@ function Busca() {
           className="h-12 w-full rounded-xl border border-input bg-card pl-10 pr-3 outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
+      <PhotoSearch onSearch={(query, label) => {
+        setPhotoLabel(label);
+        void set({ q: query, cat: undefined, sector: undefined, market: undefined });
+      }} />
+      {photoLabel && <p className="mt-2 text-sm text-muted-foreground">Identificação sugerida: {photoLabel}. Confira a marca e a quantidade nos resultados.</p>}
       <div className="-mx-4 mt-3 overflow-x-auto px-4 pb-1" role="group" aria-label="Explorar por setor">
         <div className="flex w-max gap-2">
           <button
