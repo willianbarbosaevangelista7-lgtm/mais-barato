@@ -29,6 +29,13 @@
       "when": 1793570551226,
       "tag": "0003_fix_product_image_upload_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794007932548,
+      "tag": "0004_restrict_product_image_reads",
+      "breakpoints": true
     }
   ]
 }
