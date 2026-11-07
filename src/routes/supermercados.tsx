@@ -11,7 +11,7 @@ import { useAccess } from "@/lib/auth";
 import { barcodeError } from "@/lib/barcode";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { categories, categorySectors } from "@/lib/categories";
-import { useCatalog } from "@/lib/store";
+import { useFullCatalog as useCatalog } from "@/lib/catalog-cloud";
 import { catalogRepo, groupKey, newId } from "@/lib/repository";
 import { brl, fmtDate, parseMoney, sizeLabel, todayISO } from "@/lib/pricing";
 import type { Unit } from "@/lib/types";

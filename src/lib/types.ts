@@ -24,13 +24,20 @@ export interface Product {
   /** Path of the real photo in the product-images storage bucket. */
   imagePath?: string | undefined;
   isDemo?: boolean | undefined;
+  /** approved = visible to consumers; pending/rejected only in the partner/admin areas. */
+  status?: ProductStatus | undefined;
 }
+
+export type ProductStatus = "approved" | "pending" | "rejected";
+export type PriceSource = "manual" | "scan" | "import" | "label_photo" | "admin";
 
 export interface Price {
   productId: string;
   marketId: string;
   price: number;
   updatedAt: string; // ISO date
+  recordedAt?: string | undefined; // timestamp of the last change
+  source?: PriceSource | undefined;
 }
 
 export interface Offer {

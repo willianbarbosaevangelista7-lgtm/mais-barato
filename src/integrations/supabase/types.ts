@@ -14,6 +14,118 @@ export type Database = {
   }
   public: {
     Tables: {
+      import_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_name: string
+          id: string
+          kind: string
+          market_id: string
+          published: number
+          published_at: string | null
+          status: string
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          id?: string
+          kind: string
+          market_id: string
+          published?: number
+          published_at?: string | null
+          status?: string
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          market_id?: string
+          published?: number
+          published_at?: string | null
+          status?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_rows: {
+        Row: {
+          action: string
+          barcode: string
+          batch_id: string
+          brand: string
+          category: string
+          errors: string[]
+          id: string
+          name: string
+          offer_price: number | null
+          price: number | null
+          product_id: string | null
+          row_no: number
+          size: number | null
+          unit: string
+          valid_until: string | null
+          warnings: string[]
+        }
+        Insert: {
+          action?: string
+          barcode?: string
+          batch_id: string
+          brand?: string
+          category?: string
+          errors?: string[]
+          id?: string
+          name?: string
+          offer_price?: number | null
+          price?: number | null
+          product_id?: string | null
+          row_no: number
+          size?: number | null
+          unit?: string
+          valid_until?: string | null
+          warnings?: string[]
+        }
+        Update: {
+          action?: string
+          barcode?: string
+          batch_id?: string
+          brand?: string
+          category?: string
+          errors?: string[]
+          id?: string
+          name?: string
+          offer_price?: number | null
+          price?: number | null
+          product_id?: string | null
+          row_no?: number
+          size?: number | null
+          unit?: string
+          valid_until?: string | null
+          warnings?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_rows_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_members: {
         Row: {
           market_id: string
@@ -103,24 +215,81 @@ export type Database = {
           },
         ]
       }
+      price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: number
+          market_id: string
+          new_price: number
+          old_price: number | null
+          product_id: string
+          source: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          market_id: string
+          new_price: number
+          old_price?: number | null
+          product_id: string
+          source?: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          market_id?: string
+          new_price?: number
+          old_price?: number | null
+          product_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prices: {
         Row: {
           market_id: string
           price: number
           product_id: string
+          recorded_at: string
+          source: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           market_id: string
           price: number
           product_id: string
+          recorded_at?: string
+          source?: string
           updated_at: string
+          updated_by?: string | null
         }
         Update: {
           market_id?: string
           price?: number
           product_id?: string
+          recorded_at?: string
+          source?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -152,6 +321,7 @@ export type Database = {
           is_demo: boolean
           name: string
           size: number
+          status: string
           unit: string
         }
         Insert: {
@@ -166,6 +336,7 @@ export type Database = {
           is_demo?: boolean
           name: string
           size: number
+          status?: string
           unit: string
         }
         Update: {
@@ -180,6 +351,7 @@ export type Database = {
           is_demo?: boolean
           name?: string
           size?: number
+          status?: string
           unit?: string
         }
         Relationships: []
@@ -271,6 +443,7 @@ export type Database = {
         Args: { _market_id: string; _user_id: string }
         Returns: boolean
       }
+      publish_import_batch: { Args: { p_batch_id: string }; Returns: number }
       save_market_item: {
         Args: {
           p_market_id: string
@@ -278,6 +451,19 @@ export type Database = {
           p_offer_price: number
           p_price: number
           p_product: Json
+          p_updated_at: string
+          p_valid_until: string
+        }
+        Returns: undefined
+      }
+      save_market_item_v2: {
+        Args: {
+          p_market_id: string
+          p_offer_id: string
+          p_offer_price: number
+          p_price: number
+          p_product: Json
+          p_source: string
           p_updated_at: string
           p_valid_until: string
         }
