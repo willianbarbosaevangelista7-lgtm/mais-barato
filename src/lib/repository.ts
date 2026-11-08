@@ -74,7 +74,7 @@ export const cloudCatalogRepository: CatalogRepository = {
   },
   async uploadImage(productId, blob) {
     const path = `${productId}/${Date.now()}.jpg`;
-    const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false });
+    const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false });
     fail(error);
     return path;
   },
