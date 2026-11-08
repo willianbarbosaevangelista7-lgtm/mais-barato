@@ -16,6 +16,8 @@ const required = [
   'SUPABASE_STORAGE_TEST_EDITOR_EMAIL',
   'SUPABASE_STORAGE_TEST_EDITOR_PASSWORD',
   'SUPABASE_STORAGE_TEST_MARKET_ID',
+  'SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL',
+  'SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD',
 ];
 for (const key of required) {
   if (!process.env[key]) throw new Error(`Missing required environment variable: ${key}`);
@@ -44,11 +46,9 @@ const anon = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
 const editor = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const customer = process.env.SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL
-  ? createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
-  : null;
+const customer = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
 const runId = randomUUID().replaceAll('-', '');
 const productIds = ['approved', 'pending', 'rejected'].map((state) => `stg-${runId}-${state}`);
@@ -242,8 +242,6 @@ try {
       'Cliente não consegue enviar imagem para product-images',
       () => customer.storage.from(bucket).upload(`${productIds[0]}/customer-forbidden.png`, png, { contentType: 'image/png' }),
     );
-  } else {
-    console.log('SKIP: defina SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL/PASSWORD para testar isolamento de cliente.');
   }
 
   // Update/delete authorization: a customer must not mutate an editor-owned object.
@@ -294,5 +292,5 @@ try {
   const { error: productCleanupError } = await admin.from('products').delete().in('id', productIds);
   if (productCleanupError) console.error(`Cleanup warning (products): ${productCleanupError.message}`);
   await editor.auth.signOut();
-  if (customer) await customer.auth.signOut();
+  await customer.auth.signOut();
 }
