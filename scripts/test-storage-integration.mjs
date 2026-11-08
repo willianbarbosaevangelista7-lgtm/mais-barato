@@ -183,6 +183,31 @@ try {
     if (error) throw new Error(`Associar imagem fixture: ${error.message}`);
   }
 
+  // New, unlinked objects can be previewed only by their uploader.
+  await mustSucceed(
+    'Upload imagem órfã para pré-visualização',
+    editor.storage.from(bucket).upload(orphanPath, png, { contentType: 'image/png', upsert: false }),
+  );
+  await signedDownload(editor, orphanPath, 'Uploader: prévia da própria imagem órfã');
+  await mustBeDenied(
+    'Visitante não consegue gerar URL assinada para imagem órfã',
+    () => anon.storage.from(bucket).createSignedUrl(orphanPath, 90),
+  );
+  if (customer) {
+    await mustBeDenied(
+      'Outro usuário não consegue gerar URL assinada para imagem órfã',
+      () => customer.storage.from(bucket).createSignedUrl(orphanPath, 90),
+    );
+  }
+
+  // Nested object paths are outside the canonical product-id/timestamp.jpg shape.
+  await mustBeDenied(
+    'Editor não consegue enviar caminho aninhado',
+    () => editor.storage.from(bucket).upload(
+      `${productIds[0]}/nested/${Date.now()}.jpg`, png, { contentType: 'image/png', upsert: false },
+    ),
+  );
+
   // Anonymous public access: only approved image can be signed and downloaded.
   await signedDownload(anon, paths[0], 'Visitante: imagem aprovada');
   for (const index of [1, 2]) {
