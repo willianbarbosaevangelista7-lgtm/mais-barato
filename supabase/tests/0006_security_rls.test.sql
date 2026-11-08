@@ -118,17 +118,17 @@ SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.offers WHERE product_id IN
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.price_history WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected history');
 
 SELECT extensions.throws_ok(
-  $ SELECT public.save_market_item_v2(
+  $$ SELECT public.save_market_item_v2(
     '{"id":"sec-a-approved","name":"Produto A aprovado","brand":"Teste","category":"Teste","size":1,"unit":"un","group":"sec-test","imagePath":"sec-a-approved/photo.jpg"}'::jsonb,
     'sec-market-a', 13, CURRENT_DATE, 'sec-admin-source-offer', NULL, NULL, 'admin'
-  ) $,
+  ) $$,
   'P0001',
   'Somente administradores podem registrar preços com origem admin.',
   'market user cannot spoof admin price source'
 );
 SELECT extensions.throws_ok(
-  $ INSERT INTO public.import_batches(market_id, created_by, kind)
-     VALUES ('sec-market-a', '00000000-0000-0000-0000-000000000104', 'csv') $,
+  $$ INSERT INTO public.import_batches(market_id, created_by, kind)
+     VALUES ('sec-market-a', '00000000-0000-0000-0000-000000000104', 'csv') $$,
   'P0001',
   'created_by deve corresponder ao usuário autenticado.',
   'market user cannot forge import batch creator'
