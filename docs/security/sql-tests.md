@@ -104,7 +104,7 @@ bun run test:storage
 ```
 
 Para Supabase local, use `http://127.0.0.1:54321`; nesse caso o script não exige
-`SUPABASE_STORAGE_TEST_TARGET=staging), mas mantém a confirmação explícita.
+`SUPABASE_STORAGE_TEST_TARGET=staging, mas mantém a confirmação explícita.
 
 **Proteções:** o script recusa projetos remotos sem a confirmação explícita de staging e exige
 uma segunda confirmação literal antes de criar dados. A chave service-role é usada somente
