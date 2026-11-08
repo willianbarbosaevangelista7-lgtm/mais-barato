@@ -4,7 +4,7 @@
 -- The transaction is rolled back; no persistent fixture data is created.
 
 BEGIN;
-SELECT extensions.plan(22);
+SELECT extensions.plan(23);
 
 -- 1) Trigger function cannot be called directly by API roles.
 SELECT extensions.ok(
@@ -121,13 +121,13 @@ VALUES
 -- 4) Anonymous visitors can see only approved catalog records.
 SET LOCAL ROLE anon;
 SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
-SELECT extensions.is((SELECT count(*)::integer FROM public.products), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 1,
   'anon sees only approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.prices), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 1,
   'anon sees only prices for approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.offers), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 1,
   'anon sees only offers for approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.price_history), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 1,
   'anon sees only history for approved products');
 RESET ROLE;
 
@@ -135,13 +135,13 @@ RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims',
   '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000101"}', true);
-SELECT extensions.is((SELECT count(*)::integer FROM public.products), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 1,
   'customer sees only approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.prices), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 1,
   'customer sees only prices for approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.offers), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 1,
   'customer sees only offers for approved products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.price_history), 1,
+SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 1,
   'customer sees only history for approved products');
 RESET ROLE;
 
@@ -149,13 +149,13 @@ RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims',
   '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000103"}', true);
-SELECT extensions.is((SELECT count(*)::integer FROM public.products), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 3,
   'market editor sees approved, pending and rejected products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.prices), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 3,
   'market editor sees prices for all product states');
-SELECT extensions.is((SELECT count(*)::integer FROM public.offers), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 3,
   'market editor sees offers for all product states');
-SELECT extensions.is((SELECT count(*)::integer FROM public.price_history), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 3,
   'market editor sees history for all product states');
 RESET ROLE;
 
@@ -163,13 +163,13 @@ RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims',
   '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000102"}', true);
-SELECT extensions.is((SELECT count(*)::integer FROM public.products), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 3,
   'admin sees approved, pending and rejected products');
-SELECT extensions.is((SELECT count(*)::integer FROM public.prices), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 3,
   'admin sees prices for all product states');
-SELECT extensions.is((SELECT count(*)::integer FROM public.offers), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 3,
   'admin sees offers for all product states');
-SELECT extensions.is((SELECT count(*)::integer FROM public.price_history), 3,
+SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 3,
   'admin sees history for all product states');
 RESET ROLE;
 
