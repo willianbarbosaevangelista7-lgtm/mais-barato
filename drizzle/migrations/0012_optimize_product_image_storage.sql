@@ -7,10 +7,10 @@ UPDATE storage.buckets
        allowed_mime_types = ARRAY['image/jpeg']::text[]
  WHERE id = 'product-images';
 
-DO $$
+DO $
 BEGIN
-  IF NOT FOUND THEN
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'product-images') THEN
     RAISE EXCEPTION 'Bucket product-images must exist before applying storage limits.';
   END IF;
 END
-$$;
+$;
