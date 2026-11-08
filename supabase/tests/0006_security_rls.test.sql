@@ -2,7 +2,7 @@
 -- Uses two market accounts and two distinct markets. All fixtures are rolled back.
 
 BEGIN;
-SELECT extensions.plan(58);
+SELECT extensions.plan(57);
 
 SELECT extensions.ok(NOT has_function_privilege('anon', 'public.handle_new_user()', 'EXECUTE'), 'anon cannot execute handle_new_user directly');
 SELECT extensions.ok(NOT has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE'), 'authenticated cannot execute handle_new_user directly');
