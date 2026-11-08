@@ -7,7 +7,7 @@ O workflow não cria um projeto Supabase nem aplica migrações. Ele valida a co
 ## 1. Criar/preparar o projeto de staging
 
 1. Crie um projeto Supabase separado do projeto usado pelo aplicativo publicado. Use um nome inequívoco, por exemplo `maisbarato-staging`.
-2. Guarde a URL, a chave anon/publicável e a chave service_role desse projeto. Não use os valores do projeto de produção.
+2. Guarde a URL, a chave publishable e a chave secret desse projeto. Não use os valores do projeto de produção.
 3. Aplique **uma única vez** as doze migrações `drizzle/migrations` do branch, em ordem pelo campo `idx` do `drizzle/migrations/meta/_journal.json`, até `0011_harden_market_write_identity.sql`. Use o processo de migração aprovado para o projeto; não reaplique migrações já executadas.
 4. Confirme que as tabelas `products`, `prices`, `user_roles`, `market_members` e o bucket `product-images` existem. Confirme que o bucket está privado:
 
@@ -51,8 +51,8 @@ No repositório, abra **Settings → Environments → New environment** e crie e
 Cadastre estes **Environment secrets** (todos precisam apontar para o projeto Supabase de staging):
 
 - `SUPABASE_STORAGE_TEST_URL`
-- `SUPABASE_STORAGE_TEST_ANON_KEY`
-- `SUPABASE_STORAGE_TEST_SERVICE_ROLE_KEY`
+- `SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY`
+- `SUPABASE_STORAGE_TEST_SECRET_KEY`
 - `SUPABASE_STORAGE_TEST_EDITOR_EMAIL`
 - `SUPABASE_STORAGE_TEST_EDITOR_PASSWORD`
 - `SUPABASE_STORAGE_TEST_MARKET_ID` — use `maisbarato-storage-staging`
@@ -63,9 +63,9 @@ Cadastre também esta **Environment variable** (não é secret):
 
 - `SUPABASE_STORAGE_TEST_EXPECTED_HOST` — somente o hostname da URL Supabase, sem `https://`, sem caminho e sem barra. Exemplo ilustrativo: `abcdefghijklmnopqrst.supabase.co`.
 
-O preflight do workflow confirma que todos os oito secrets e a variável existem e que o hostname real da URL corresponde exatamente ao hostname aprovado. Nenhum valor secreto é impresso nos logs.
+Use as chaves atuais do Supabase: publishable (`sb_publishable_...`) para os clientes de teste autenticados/visitante e secret (`sb_secret_...`) somente no cliente administrativo do runner. O preflight do workflow confirma que todos os oito secrets e a variável existem e que o hostname real da URL corresponde exatamente ao hostname aprovado. Nenhum valor secreto é impresso nos logs.
 
-**A chave service_role é altamente privilegiada.** Ela deve existir somente como secret do ambiente GitHub `staging`; nunca a coloque no Git, em issues, nos logs ou no chat. Não configure secrets de produção nesse ambiente.
+**A chave secret (`sb_secret_...`) é altamente privilegiada e pode ignorar RLS.** Ela deve existir somente como Environment secret do GitHub `staging` e ser usada apenas pelo runner no servidor; nunca a coloque no Git, em issues, nos logs ou no chat. Não configure secrets de produção nesse ambiente.
 
 ## 4. Executar o teste real
 
