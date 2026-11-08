@@ -50,6 +50,13 @@ if (process.env.SUPABASE_STORAGE_TEST_CONFIRM !== 'I_UNDERSTAND_THIS_CREATES_AND
 
 const bucket = 'product-images';
 const marketId = process.env.SUPABASE_STORAGE_TEST_MARKET_ID;
+const saoPauloDateParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+}).formatToParts(new Date()).reduce((parts, part) => {
+  if (part.type !== 'literal') parts[part.type] = part.value;
+  return parts;
+}, {});
+const todayInSaoPaulo = `${saoPauloDateParts.year}-${saoPauloDateParts.month}-${saoPauloDateParts.day}`;
 const admin = createClient(url, process.env.SUPABASE_STORAGE_TEST_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
@@ -127,6 +134,7 @@ try {
     .eq('user_id', editorUser.id);
   if (roleError) throw roleError;
   check(roleRows.some((row) => row.role === 'market'), 'conta de teste possui papel market');
+  check(!roleRows.some((row) => row.role === 'admin'), 'parceiro de teste não possui papel admin');
 
   const { data: memberships, error: membershipError } = await admin
     .from('market_members')
@@ -179,7 +187,7 @@ try {
       product_id,
       market_id: marketId,
       price: 1,
-      updated_at: new Date().toISOString().slice(0, 10),
+      updated_at: todayInSaoPaulo,
     })),
   );
   if (priceError) throw new Error(`Vincular produtos ao mercado: ${priceError.message}`);
@@ -309,9 +317,10 @@ try {
   // Cleanup runs with service_role even when an assertion fails.
   const cleanupPaths = [...paths, orphanPath, mutablePath, `${productIds[0]}/customer-forbidden.jpg`];
   const { error: removeError } = await admin.storage.from(bucket).remove(cleanupPaths);
-  if (removeError) console.error(`Cleanup warning (objects): ${removeError.message}`);
   const { error: productCleanupError } = await admin.from('products').delete().in('id', productIds);
-  if (productCleanupError) console.error(`Cleanup warning (products): ${productCleanupError.message}`);
+  if (removeError) console.error(`Cleanup error (objects): ${removeError.message}`);
+  if (productCleanupError) console.error(`Cleanup error (products): ${productCleanupError.message}`);
+  if (removeError || productCleanupError) process.exitCode = 1;
   await editor.auth.signOut();
   await customer.auth.signOut();
 }
