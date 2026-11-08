@@ -35,10 +35,12 @@
 - [ ] Verificar custos, limites e política de pausa do Lovable Cloud antes de ampliar o uso.
 
 ## Estado verificado em 08/11/2026
+- [x] Workflow manual de Storage inclui pré-validação dos oito secrets e da variável `SUPABASE_STORAGE_TEST_EXPECTED_HOST`, comparação exata do host, validação sintática do runner e bloqueio de execuções simultâneas no mesmo staging.
+- [x] Documentação de staging inclui SQL de criação do mercado de teste e vínculo da conta parceira; não contém credenciais.
 - [x] CI de qualidade no commit `10c8473`: lint (sem regra Prettier), testes unitários e build de produção aprovados.
 - [x] CI SQL no commit `10c8473`: workflow Drizzle + pgTAP aprovado.
-- [ ] Integração HTTP do Storage em staging: aguarda projeto, contas de teste e secrets do ambiente GitHub `staging`.
-- [ ] Validação do app publicado, testes em Android, teste de perfis/mercados e verificação de custos Lovable Cloud ainda pendentes.
+- [ ] Integração HTTP do Storage em staging: runner corrigido para usar JPEG real, exigir parceiro com papel `market` + associação ao mercado, exigir cliente sem privilégios/vínculos, validar hostname de staging e reprovar falha de limpeza. Continua aguardando projeto, contas de teste e configuração dos secrets/variável do ambiente GitHub `staging`.
+- [ ] Validação do app publicado, testes em Android, teste funcional de perfis/mercados e verificação de custos Lovable Cloud ainda pendentes.
 
 ## Próxima prioridade
 1. Preparar o ambiente Supabase `staging` e executar o teste real do Storage.
