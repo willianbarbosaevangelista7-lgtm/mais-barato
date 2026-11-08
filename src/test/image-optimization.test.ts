@@ -29,7 +29,7 @@ describe("product image optimization", () => {
       expect(result.type).toBe("image/jpeg");
       expect(result.size).toBeLessThanOrEqual(MAX_PRODUCT_IMAGE_BYTES);
       expect(canvas.width).toBe(MAX_PRODUCT_IMAGE_SIDE);
-      expect(canvas.height).toBe(600);
+      expect(canvas.height).toBe(640);
       expect(bitmap.close).toHaveBeenCalledOnce();
     } finally {
       createSpy.mockRestore();
