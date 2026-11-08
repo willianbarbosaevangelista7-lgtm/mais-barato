@@ -2,7 +2,7 @@
 -- Uses two market accounts and two distinct markets. All fixtures are rolled back.
 
 BEGIN;
-SELECT extensions.plan(39);
+SELECT extensions.plan(49);
 
 SELECT extensions.ok(NOT has_function_privilege('anon', 'public.handle_new_user()', 'EXECUTE'), 'anon cannot execute handle_new_user directly');
 SELECT extensions.ok(NOT has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE'), 'authenticated cannot execute handle_new_user directly');
@@ -76,6 +76,8 @@ VALUES
 -- Public visitors see both approved products and no non-approved products.
 SET LOCAL ROLE anon;
 SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
+SELECT extensions.is(public.has_role('00000000-0000-0000-0000-000000000104', 'market'), false, 'anon cannot probe another user role');
+SELECT extensions.is(public.is_market_member('00000000-0000-0000-0000-000000000104', 'sec-market-b'), false, 'anon cannot probe another user membership');
 SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 2, 'anon sees only the two approved products');
 SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 2, 'anon sees only prices for approved products');
 SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 2, 'anon sees only offers for approved products');
@@ -96,6 +98,12 @@ RESET ROLE;
 -- Market A sees public approved rows plus only its own pending/rejected rows.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000103"}', true);
+SELECT extensions.is(public.has_role('00000000-0000-0000-0000-000000000103', 'market'), true, 'market A can inspect its own role');
+SELECT extensions.is(public.has_role('00000000-0000-0000-0000-000000000104', 'market'), false, 'market A cannot probe market B role');
+SELECT extensions.is(public.has_role('00000000-0000-0000-0000-000000000104', 'admin'), false, 'market A cannot probe another user admin status');
+SELECT extensions.is(public.is_market_member('00000000-0000-0000-0000-000000000103', 'sec-market-a'), true, 'market A can inspect its own membership');
+SELECT extensions.is(public.is_market_member('00000000-0000-0000-0000-000000000104', 'sec-market-b'), false, 'market A cannot probe market B membership');
+SELECT extensions.is(public.is_market_member('00000000-0000-0000-0000-000000000104', 'sec-market-a'), false, 'market A cannot probe another user membership in its own market');
 SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 4, 'market A sees both approved products and only its own pending/rejected products');
 SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 4, 'market A sees public approved prices and only its own private prices');
 SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 4, 'market A sees public approved offers and only its own private offers');
@@ -122,6 +130,8 @@ RESET ROLE;
 -- Administrators retain full visibility across both markets.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000102"}', true);
+SELECT extensions.is(public.has_role('00000000-0000-0000-0000-000000000104', 'market'), true, 'admin can inspect another user role');
+SELECT extensions.is(public.is_market_member('00000000-0000-0000-0000-000000000104', 'sec-market-b'), true, 'admin can inspect another user membership');
 SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIKE 'sec-%'), 6, 'admin sees all products in both markets');
 SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 6, 'admin sees all prices in both markets');
 SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 6, 'admin sees all offers in both markets');
