@@ -2,7 +2,7 @@
 -- Uses two market accounts and two distinct markets. All fixtures are rolled back.
 
 BEGIN;
-SELECT extensions.plan(55);
+SELECT extensions.plan(58);
 
 SELECT extensions.ok(NOT has_function_privilege('anon', 'public.handle_new_user()', 'EXECUTE'), 'anon cannot execute handle_new_user directly');
 SELECT extensions.ok(NOT has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE'), 'authenticated cannot execute handle_new_user directly');
@@ -64,6 +64,8 @@ VALUES
   ('sec-offer-b-rejected', 'sec-b-rejected', 'sec-market-b', 20, CURRENT_DATE + 7);
 
 SELECT extensions.is((SELECT public FROM storage.buckets WHERE id = 'product-images'), false, 'product-images bucket is private');
+SELECT extensions.is((SELECT file_size_limit::bigint FROM storage.buckets WHERE id = 'product-images'), 1048576::bigint, 'product image uploads are capped at 1 MiB');
+SELECT extensions.is((SELECT allowed_mime_types FROM storage.buckets WHERE id = 'product-images'), ARRAY['image/jpeg']::text[], 'product image bucket accepts JPEG only');
 INSERT INTO storage.objects (bucket_id, name)
 VALUES
   ('product-images', 'sec-a-approved/photo.jpg'),
