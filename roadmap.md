@@ -18,6 +18,13 @@
 - [x] Exportação CSV dos relatórios.
 - [x] Remoção segura de produtos: ocultar quando já houver referências/preços, preservando histórico.
 
+## Custos Supabase — otimizações no PR #1
+- [x] Reduzir payload do catálogo com seleção explícita de colunas e cache de 2 minutos.
+- [x] Comprimir fotos no navegador para JPEG de até 400 KB e limitar o bucket privado a 1 MiB.
+- [x] Aplicar allowlist JPEG e cache de um ano para objetos com caminho imutável.
+- [x] Acrescentar testes unitários, pgTAP e regressão HTTP para MIME não permitido.
+- [ ] Medir egress, bytes por imagem, chamadas REST, CPU e latência no projeto Supabase após implantação.
+
 ## Segurança — acompanhamento necessário
 - [x] Adicionar arquivos .env ao .gitignore.
 - [x] Remover o .env do estado atual da branch principal.
