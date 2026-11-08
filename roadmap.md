@@ -23,10 +23,10 @@
 - [x] Remover o .env do estado atual da branch principal.
 - [ ] Revogar/rotacionar qualquer segredo que tenha estado no .env publicado. A remoção do arquivo não apaga cópias do histórico Git.
 - [ ] Avaliar com cuidado a limpeza do histórico Git caso tenha havido segredo privado. Não fazer force-push improvisado: este repositório é sincronizado com Lovable.
-- [ ] Fazer revisão final das políticas RLS, funções SQL e permissões no ambiente Lovable Cloud.
+- [ ] Fazer revisão final das políticas RLS, funções SQL e permissões no ambiente Lovable Cloud; os testes pgTAP do branch passaram, mas o ambiente Lovable Cloud ainda precisa de validação.
 
 ## Validação antes do lançamento
-- [ ] Rodar localmente bun run lint, bun run test e bun run build.
+- [x] CI no commit `10c8473`: ESLint (com a regra Prettier temporariamente desativada), testes unitários e build de produção aprovados no GitHub Actions. A execução local ainda não foi feita.
 - [ ] Testar em Android real: câmera, leitura de EAN, captura/seleção de fotos e envio.
 - [ ] Testar em duas contas/navegadores: atualização de preço compartilhada e isolamento de mercados.
 - [ ] Testar visitante, cliente, parceiro e administrador com permissões diferentes.
@@ -34,8 +34,15 @@
 - [ ] Confirmar no banco de produção que histórico é gerado e que apenas produtos aprovados aparecem ao consumidor.
 - [ ] Verificar custos, limites e política de pausa do Lovable Cloud antes de ampliar o uso.
 
+## Estado verificado em 08/11/2026
+- [x] CI de qualidade no commit `10c8473`: lint (sem regra Prettier), testes unitários e build de produção aprovados.
+- [x] CI SQL no commit `10c8473`: workflow Drizzle + pgTAP aprovado.
+- [ ] Integração HTTP do Storage em staging: aguarda projeto, contas de teste e secrets do ambiente GitHub `staging`.
+- [ ] Validação do app publicado, testes em Android, teste de perfis/mercados e verificação de custos Lovable Cloud ainda pendentes.
+
 ## Próxima prioridade
-1. Rotacionar segredos expostos e concluir a revisão de segurança.
-2. Rodar os testes automatizados e corrigir eventuais falhas.
-3. Fazer a rodada de testes manuais em Android e com contas de perfis diferentes.
-4. Atualizar a documentação com os resultados reais desses testes.
+1. Preparar o ambiente Supabase `staging` e executar o teste real do Storage.
+2. Confirmar e, se necessário, rotacionar segredos privados antigos; avaliar o histórico Git sem reescrever o histórico conectado ao Lovable.
+3. Fazer testes manuais em Android e com contas de perfis/mercados diferentes.
+4. Validar o app publicado e os custos/limites do Lovable Cloud.
+5. Obter revisão independente antes de integrar as migrações em produção.
