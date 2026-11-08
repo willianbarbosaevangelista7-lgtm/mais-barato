@@ -73,7 +73,7 @@ O preflight do workflow confirma que todos os oito secrets e a variável existem
 2. Selecione **Run workflow**.
 3. Escolha a branch `security/fix-admin-bootstrap-public-catalog`.
 4. Abra a execução e confirme que o preflight passou e que todas as verificações do script aparecem como `PASS`.
-5. Confirme a linha final `Storage integration tests passed: N checks.` e verifique se não houve avisos de limpeza (`Cleanup warning`).
+5. Confirme a linha final `Storage integration tests passed: N checks.` e verifique se não houve erros de limpeza (`Cleanup error`). O workflow falha quando a remoção dos dados temporários não é confirmada.
 
 O workflow é manual, usa o ambiente `staging` e não executa migrações. Ele não deve receber dados do ambiente de produção. Se o teste falhar, preserve os logs, confira/remova manualmente eventuais fixtures que tenham sobrado em staging e corrija a causa antes de repetir.
 
