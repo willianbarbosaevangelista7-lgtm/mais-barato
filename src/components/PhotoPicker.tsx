@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { useImageUrl } from "@/lib/catalog-cloud";
 import { compressProductImage, isSupportedProductImage } from "@/lib/image-optimization";
 
+// Backward-compatible export for PhotoSearch and import flows.
+export { compressProductImage as compressImage } from "@/lib/image-optimization";
+
 export type PhotoState = { path?: string | undefined; pending?: Blob | undefined; removed?: boolean | undefined };
 
 export function PhotoPicker({ value, onChange, disabled }: { value: PhotoState; onChange: (v: PhotoState) => void; disabled?: boolean | undefined }) {
