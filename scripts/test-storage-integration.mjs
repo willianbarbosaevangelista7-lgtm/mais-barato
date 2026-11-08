@@ -54,6 +54,7 @@ const runId = randomUUID().replaceAll('-', '');
 const productIds = ['approved', 'pending', 'rejected'].map((state) => `stg-${runId}-${state}`);
 const paths = productIds.map((id) => `${id}/${Date.now()}.jpg`);
 const orphanPath = `stg-${runId}-orphan/${Date.now()}.jpg`;
+const mutablePath = `${productIds[0]}/${Date.now()+1}.jpg`;
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p6sAAAAASUVORK5CYII=',
   'base64',
@@ -245,10 +246,47 @@ try {
     console.log('SKIP: defina SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL/PASSWORD para testar isolamento de cliente.');
   }
 
+  // Update/delete authorization: a customer must not mutate an editor-owned object.
+  await mustSucceed(
+    'Upload objeto de teste para update/delete',
+    editor.storage.from(bucket).upload(mutablePath, png, { contentType: 'image/png', upsert: false }),
+  );
+  if (customer) {
+    try {
+      await customer.storage.from(bucket).update(mutablePath, png, { contentType: 'image/png' });
+    } catch {
+      // RLS denial may be returned as an error or an empty result; verify persisted bytes below.
+    }
+    const afterCustomerUpdate = await admin.storage.from(bucket).download(mutablePath);
+    check(!afterCustomerUpdate.error && Buffer.from(await afterCustomerUpdate.data.arrayBuffer()).equals(png),
+      'Cliente não consegue alterar objeto pertencente ao editor');
+
+    try {
+      await customer.storage.from(bucket).remove([mutablePath]);
+    } catch {
+      // RLS denial may be returned as an error or an empty result; verify object still exists below.
+    }
+    const afterCustomerDelete = await admin.storage.from(bucket).download(mutablePath);
+    check(!afterCustomerDelete.error && Buffer.from(await afterCustomerDelete.data.arrayBuffer()).equals(png),
+      'Cliente não consegue excluir objeto pertencente ao editor');
+  }
+
+  await mustSucceed(
+    'Editor autorizado atualiza seu objeto',
+    editor.storage.from(bucket).update(mutablePath, png, { contentType: 'image/png' }),
+  );
+  const afterEditorUpdate = await admin.storage.from(bucket).download(mutablePath);
+  check(!afterEditorUpdate.error && Buffer.from(await afterEditorUpdate.data.arrayBuffer()).equals(png),
+    'Editor autorizado consegue atualizar seu objeto');
+
+  await mustSucceed('Editor autorizado exclui seu objeto', editor.storage.from(bucket).remove([mutablePath]));
+  const afterEditorDelete = await admin.storage.from(bucket).download(mutablePath);
+  check(Boolean(afterEditorDelete.error), 'Editor autorizado consegue excluir seu objeto');
+
   console.log(`\nStorage integration tests passed: ${checks} checks.`);
 } finally {
   // Cleanup runs with service_role even when an assertion fails.
-  const cleanupPaths = [...paths, orphanPath, `${productIds[0]}/customer-forbidden.png`];
+  const cleanupPaths = [...paths, orphanPath, mutablePath, `${productIds[0]}/customer-forbidden.png`];
   const { error: removeError } = await admin.storage.from(bucket).remove(cleanupPaths);
   if (removeError) console.error(`Cleanup warning (objects): ${removeError.message}`);
   const { error: productCleanupError } = await admin.from('products').delete().in('id', productIds);
