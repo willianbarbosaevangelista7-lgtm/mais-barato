@@ -6,7 +6,7 @@
 - O cache compartilhado do catálogo usa validade de 2 minutos e não dispara uma nova leitura apenas porque a aba recebeu foco. Ao montar uma tela após o cache vencer ou reconectar, o TanStack Query pode atualizar os dados.
 - Fotos selecionadas são normalizadas no navegador para JPEG, lado maior de até 1.280 px e alvo máximo de 400 KB. A compressão reduz qualidade em etapas e, se necessário, reduz dimensões; falha de forma explícita se não conseguir respeitar o limite.
 - O bucket `product-images` continua privado, aceita apenas `image/jpeg` e impõe limite de 1 MiB por objeto. O limite do bucket é uma segunda barreira, não substitui a validação no cliente nem as políticas RLS.
-- Uploads usam caminhos com timestamp que não são sobrescritos e `cacheControl=31536000` (um ano), permitindo cache eficiente de objetos imutáveis.
+- Uploads usam caminhos com timestamp e `upsert=false`, evitando sobrescrita de objetos. Não ampliamos o cache HTTP para um ano no bucket privado: o cache não deve prolongar a disponibilidade de uma URL assinada além de sua validade.
 - As URLs assinadas continuam sendo usadas para respeitar as políticas de leitura do bucket privado. A validade atual de 1 hora e o cache de consulta de 50 minutos foram preservados.
 
 ## Proteções preservadas
