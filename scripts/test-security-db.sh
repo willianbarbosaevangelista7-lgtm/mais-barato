@@ -25,6 +25,13 @@ if [[ ! -d "$TEST_DIR" ]]; then
   exit 1
 fi
 
+# Keep one migration source of truth. If SQL migrations are later added to
+# Supabase's default folder, stop instead of silently applying two histories.
+if compgen -G "supabase/migrations/*.sql" > /dev/null; then
+  echo "Erro: foram encontrados SQLs em supabase/migrations. Mantenha as migrações no Drizzle journal ou planeje uma transição explícita." >&2
+  exit 1
+fi
+
 # This script is intentionally restricted to the local Supabase stack.
 # Never point this test harness at a hosted/production database.
 DB_URL="${LOCAL_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
