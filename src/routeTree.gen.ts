@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BuscaRouteImport } from './routes/busca'
+import { Route as CentralRouteImport } from './routes/central'
 import { Route as CompararRouteImport } from './routes/comparar'
 import { Route as ListaRouteImport } from './routes/lista'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -30,6 +31,11 @@ const AuthRoute = AuthRouteImport.update({
 const BuscaRoute = BuscaRouteImport.update({
   id: '/busca',
   path: '/busca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CentralRoute = CentralRouteImport.update({
+  id: '/central',
+  path: '/central',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompararRoute = CompararRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/busca': typeof BuscaRoute
+  '/central': typeof CentralRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/busca': typeof BuscaRoute
+  '/central': typeof CentralRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/busca': typeof BuscaRoute
+  '/central': typeof CentralRoute
   '/comparar': typeof CompararRoute
   '/lista': typeof ListaRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/busca'
+    | '/central'
     | '/comparar'
     | '/lista'
     | '/reset-password'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/busca'
+    | '/central'
     | '/comparar'
     | '/lista'
     | '/reset-password'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/busca'
+    | '/central'
     | '/comparar'
     | '/lista'
     | '/reset-password'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BuscaRoute: typeof BuscaRoute
+  CentralRoute: typeof CentralRoute
   CompararRoute: typeof CompararRoute
   ListaRoute: typeof ListaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/busca'
       fullPath: '/busca'
       preLoaderRoute: typeof BuscaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/central': {
+      id: '/central'
+      path: '/central'
+      fullPath: '/central'
+      preLoaderRoute: typeof CentralRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comparar': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BuscaRoute: BuscaRoute,
+  CentralRoute: CentralRoute,
   CompararRoute: CompararRoute,
   ListaRoute: ListaRoute,
   ResetPasswordRoute: ResetPasswordRoute,

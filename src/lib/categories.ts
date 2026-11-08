@@ -15,3 +15,5 @@ export const categorySectors = [
 ];
 
 export const categories = categorySectors.flatMap((sector) => sector.categories);
+/** Sector name of a category ("Outros" when unknown). */
+export const sectorOf = (category: string) => categorySectors.find((s) => (s.categories as readonly string[]).includes(category))?.name ?? "Outros";

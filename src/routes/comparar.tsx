@@ -3,6 +3,9 @@ import { Trophy } from "lucide-react";
 import { AppShell, PageTitle } from "@/components/AppShell";
 import { AddToListButton, BarcodeLabel, ProductThumb } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
+import { SOURCE_LABEL } from "@/lib/catalog-cloud";
+import { PriceHistory } from "@/components/central/PriceHistory";
+import { fmtDateTime } from "@/components/central/ui";
 import { brl, fmtDate, pct, priceSummary, pricesFor, sizeLabel, unitPrice, comparable } from "@/lib/pricing";
 
 export const Route = createFileRoute("/comparar")({
@@ -88,6 +91,7 @@ function Detail({ productId }: { productId: string }) {
             <ul className="space-y-2">
               {prices.map((mp, i) => {
                 const d = mp.price - s.min;
+                const raw = catalog.prices.find((x) => x.productId === p.id && x.marketId === mp.marketId);
                 return (
                   <li key={mp.marketId} className={`rounded-xl border p-3 ${i === 0 ? "border-success bg-secondary" : "border-border bg-card"}`}>
                     <div className="flex items-center justify-between gap-2">
@@ -95,7 +99,7 @@ function Detail({ productId }: { productId: string }) {
                       <span className="shrink-0 text-lg font-bold">{brl(mp.price)}</span>
                     </div>
                     <div className="mt-0.5 flex flex-wrap justify-between gap-x-2 text-xs text-muted-foreground">
-                      <span>Atualizado em {fmtDate(mp.updatedAt)}{mp.isOffer && ` · oferta demo até ${fmtDate(mp.validUntil!)}`}</span>
+                      <span>Atualizado em {raw?.recordedAt ? fmtDateTime(raw.recordedAt) : fmtDate(mp.updatedAt)}{raw?.source && ` · ${SOURCE_LABEL[raw.source]}`}{mp.isOffer && ` · oferta demo até ${fmtDate(mp.validUntil!)}`}</span>
                       <span className={i === 0 ? "font-bold text-primary" : ""}>
                         {i === 0 ? "Mais barato" : `+${brl(d)} (+${pct((d / s.min) * 100)})`}
                       </span>
@@ -109,6 +113,8 @@ function Detail({ productId }: { productId: string }) {
       ) : (
         <p className="text-muted-foreground">Sem preços cadastrados para este produto.</p>
       )}
+
+      <PriceHistory productId={p.id} catalog={catalog} />
 
       {equivalents.length > 1 && (
         <div>

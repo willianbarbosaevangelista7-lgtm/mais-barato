@@ -190,6 +190,10 @@ function Supermercados() {
   return (
     <AppShell>
       {title}
+      <Link to="/central" className="mb-4 flex items-center justify-between rounded-2xl bg-hero p-4 text-primary-foreground">
+        <span><strong className="block">Central de cadastro</strong><span className="text-xs opacity-90">Preço rápido por código, importação Excel/CSV, foto de etiqueta, aprovações e relatórios</span></span>
+        <span aria-hidden>→</span>
+      </Link>
       {scan && (
         <BarcodeScanner
           onClose={() => setScan(false)}
