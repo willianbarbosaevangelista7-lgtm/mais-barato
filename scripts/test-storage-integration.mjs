@@ -247,13 +247,15 @@ try {
   }
 
   // Update/delete authorization: a customer must not mutate an editor-owned object.
+  const customerPayload = Buffer.concat([png, Buffer.from('customer-mutation')]);
+  const updatedPayload = Buffer.concat([png, Buffer.from('editor-update')]);
   await mustSucceed(
     'Upload objeto de teste para update/delete',
     editor.storage.from(bucket).upload(mutablePath, png, { contentType: 'image/png', upsert: false }),
   );
   if (customer) {
     try {
-      await customer.storage.from(bucket).update(mutablePath, png, { contentType: 'image/png' });
+      await customer.storage.from(bucket).update(mutablePath, customerPayload, { contentType: 'image/png' });
     } catch {
       // RLS denial may be returned as an error or an empty result; verify persisted bytes below.
     }
@@ -273,10 +275,10 @@ try {
 
   await mustSucceed(
     'Editor autorizado atualiza seu objeto',
-    editor.storage.from(bucket).update(mutablePath, png, { contentType: 'image/png' }),
+    editor.storage.from(bucket).update(mutablePath, updatedPayload, { contentType: 'image/png' }),
   );
   const afterEditorUpdate = await admin.storage.from(bucket).download(mutablePath);
-  check(!afterEditorUpdate.error && Buffer.from(await afterEditorUpdate.data.arrayBuffer()).equals(png),
+  check(!afterEditorUpdate.error && Buffer.from(await afterEditorUpdate.data.arrayBuffer()).equals(updatedPayload),
     'Editor autorizado consegue atualizar seu objeto');
 
   await mustSucceed('Editor autorizado exclui seu objeto', editor.storage.from(bucket).remove([mutablePath]));
