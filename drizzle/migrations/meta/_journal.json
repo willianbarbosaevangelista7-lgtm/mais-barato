@@ -2,54 +2,13 @@
   "version": "7",
   "dialect": "postgresql",
   "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1791769972695,
-      "tag": "0000_catalog_roles_storage",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1792691752205,
-      "tag": "0001_shopping_list_items",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1793570083173,
-      "tag": "0002_restrict_product_field_edits",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1793570551226,
-      "tag": "0003_fix_product_image_upload_policy",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1794007932548,
-      "tag": "0004_restrict_product_image_reads",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1794009685631,
-      "tag": "0005_product_price_center",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1794144000000,
-      "tag": "0006_secure_admin_bootstrap_and_public_catalog",
-      "breakpoints": true
-    }
+    { "idx": 0, "version": "7", "when": 1791769972695, "tag": "0000_catalog_roles_storage", "breakpoints": true },
+    { "idx": 1, "version": "7", "when": 1792691752205, "tag": "0001_shopping_list_items", "breakpoints": true },
+    { "idx": 2, "version": "7", "when": 1793570083173, "tag": "0002_restrict_product_field_edits", "breakpoints": true },
+    { "idx": 3, "version": "7", "when": 1793570551226, "tag": "0003_fix_product_image_upload_policy", "breakpoints": true },
+    { "idx": 4, "version": "7", "when": 1794007932548, "tag": "0004_restrict_product_image_reads", "breakpoints": true },
+    { "idx": 5, "version": "7", "when": 1794009685631, "tag": "0005_product_price_center", "breakpoints": true },
+    { "idx": 6, "version": "7", "when": 1794144000000, "tag": "0006_secure_admin_bootstrap_and_public_catalog", "breakpoints": true },
+    { "idx": 7, "version": "7", "when": 1794150000000, "tag": "0007_secure_product_image_reads", "breakpoints": true }
   ]
 }
