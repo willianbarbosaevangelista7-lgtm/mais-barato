@@ -36,6 +36,9 @@ jobs:
       - name: Lint
         run: "bun run lint --rule 'prettier/prettier: off'"
 
+      - name: Storage integration script syntax
+        run: node --check scripts/test-storage-integration.mjs
+
       - name: Unit tests
         run: bun run test
 
