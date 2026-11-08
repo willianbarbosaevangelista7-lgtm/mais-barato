@@ -230,6 +230,13 @@ try {
     );
   }
 
+  // The bucket accepts JPEG only; reject a different MIME type before storing an object.
+  const unsupportedMimePath = `${productIds[0]}/${fixtureTimestamp + productIds.length + 2}.jpg`;
+  await mustBeDenied(
+    'Bucket rejeita upload com MIME image/png',
+    () => editor.storage.from(bucket).upload(unsupportedMimePath, imageBytes, { contentType: 'image/png', upsert: false }),
+  );
+
   // Nested object paths are outside the canonical product-id/timestamp.jpg shape.
   await mustBeDenied(
     'Editor não consegue enviar caminho aninhado',
@@ -315,7 +322,7 @@ try {
   console.log(`\nStorage integration tests passed: ${checks} checks.`);
 } finally {
   // Cleanup runs with service_role even when an assertion fails.
-  const cleanupPaths = [...paths, orphanPath, mutablePath, `${productIds[0]}/customer-forbidden.jpg`];
+  const cleanupPaths = [...paths, orphanPath, mutablePath, `${productIds[0]}/customer-forbidden.jpg`, `${productIds[0]}/${fixtureTimestamp + productIds.length + 2}.jpg`];
   const { error: removeError } = await admin.storage.from(bucket).remove(cleanupPaths);
   const { error: productCleanupError } = await admin.from('products').delete().in('id', productIds);
   if (removeError) console.error(`Cleanup error (objects): ${removeError.message}`);
