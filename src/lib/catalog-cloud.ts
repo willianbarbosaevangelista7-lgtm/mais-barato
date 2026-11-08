@@ -8,11 +8,12 @@ export const IMAGE_BUCKET = "product-images";
 
 /** Reads the shared catalog (public data) from Lovable Cloud. */
 export async function fetchCatalog(): Promise<Catalog> {
+  // Request only fields consumed by the client; RLS remains the authority for row visibility.
   const [m, p, pr, o] = await Promise.all([
-    supabase.from("markets").select("*").order("created_at"),
-    supabase.from("products").select("*").order("created_at"),
-    supabase.from("prices").select("*"),
-    supabase.from("offers").select("*"),
+    supabase.from("markets").select("id,name,neighborhood,address,is_demo"),
+    supabase.from("products").select("id,name,brand,category,size,unit,emoji,group_key,barcode,image_path,is_demo,status"),
+    supabase.from("prices").select("product_id,market_id,price,updated_at,recorded_at,source"),
+    supabase.from("offers").select("id,product_id,market_id,price,valid_until"),
   ]);
   const err = m.error ?? p.error ?? pr.error ?? o.error;
   if (err) throw new Error(err.message);
@@ -28,7 +29,15 @@ export async function fetchCatalog(): Promise<Catalog> {
   };
 }
 
-export const catalogQuery = queryOptions({ queryKey: ["catalog"], queryFn: fetchCatalog, staleTime: 30_000 });
+// A short shared cache avoids repeated full-catalog downloads on route changes while
+// keeping price freshness bounded. RLS is evaluated on every network refresh.
+export const CATALOG_STALE_TIME_MS = 120_000;
+export const catalogQuery = queryOptions({
+  queryKey: ["catalog"],
+  queryFn: fetchCatalog,
+  staleTime: CATALOG_STALE_TIME_MS,
+  refetchOnWindowFocus: false,
+});
 
 export function useCatalogQuery() {
   return useQuery(catalogQuery);

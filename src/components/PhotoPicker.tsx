@@ -2,26 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, ImageIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useImageUrl } from "@/lib/catalog-cloud";
+import { compressProductImage, isSupportedProductImage } from "@/lib/image-optimization";
 
-const MAX_SIDE = 1280;
-
-/** Resizes keeping the aspect ratio and re-encodes as JPEG, lowering quality until it is small. */
-export async function compressImage(file: File): Promise<Blob> {
-  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" } as ImageBitmapOptions);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bmp.width * scale);
-  canvas.height = Math.round(bmp.height * scale);
-  const context = canvas.getContext("2d");
-  if (!context) { bmp.close(); throw new Error("Falha ao processar a imagem."); }
-  context.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-  bmp.close();
-  for (const q of [0.82, 0.7, 0.6]) {
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", q));
-    if (blob && (blob.size < 400_000 || q === 0.6)) return blob;
-  }
-  throw new Error("Falha ao processar a imagem.");
-}
+// Backward-compatible export for PhotoSearch and import flows.
+export { compressProductImage as compressImage } from "@/lib/image-optimization";
 
 export type PhotoState = { path?: string | undefined; pending?: Blob | undefined; removed?: boolean | undefined };
 
@@ -42,9 +26,9 @@ export function PhotoPicker({ value, onChange, disabled }: { value: PhotoState; 
 
   const pick = async (f: File | undefined) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return void toast.error("Escolha um arquivo de imagem.");
+    if (!isSupportedProductImage(f)) return void toast.error("Use uma imagem JPG, PNG ou WebP.");
     try {
-      setDraft(await compressImage(f));
+      setDraft(await compressProductImage(f));
     } catch {
       toast.error("Não foi possível ler esta imagem. Tente outra foto.");
     }

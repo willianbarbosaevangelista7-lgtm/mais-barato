@@ -1,0 +1,88 @@
+name: Storage staging integration
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: maisbarato-storage-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  storage-staging:
+    name: Supabase Storage authorization tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Storage test script syntax
+        run: node --check scripts/test-storage-integration.mjs
+
+      - name: Validate staging configuration
+        env:
+          SUPABASE_STORAGE_TEST_URL: ${{ secrets.SUPABASE_STORAGE_TEST_URL }}
+          SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_STORAGE_TEST_SECRET_KEY: ${{ secrets.SUPABASE_STORAGE_TEST_SECRET_KEY }}
+          SUPABASE_STORAGE_TEST_EDITOR_EMAIL: ${{ secrets.SUPABASE_STORAGE_TEST_EDITOR_EMAIL }}
+          SUPABASE_STORAGE_TEST_EDITOR_PASSWORD: ${{ secrets.SUPABASE_STORAGE_TEST_EDITOR_PASSWORD }}
+          SUPABASE_STORAGE_TEST_MARKET_ID: ${{ secrets.SUPABASE_STORAGE_TEST_MARKET_ID }}
+          SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL: ${{ secrets.SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL }}
+          SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD: ${{ secrets.SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD }}
+          SUPABASE_STORAGE_TEST_EXPECTED_HOST: ${{ vars.SUPABASE_STORAGE_TEST_EXPECTED_HOST }}
+        run: |
+          set -euo pipefail
+          required=(
+            SUPABASE_STORAGE_TEST_URL
+            SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY
+            SUPABASE_STORAGE_TEST_SECRET_KEY
+            SUPABASE_STORAGE_TEST_EDITOR_EMAIL
+            SUPABASE_STORAGE_TEST_EDITOR_PASSWORD
+            SUPABASE_STORAGE_TEST_MARKET_ID
+            SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL
+            SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD
+            SUPABASE_STORAGE_TEST_EXPECTED_HOST
+          )
+          missing=()
+          for name in "${required[@]}"; do
+            if [[ -z "${!name:-}" ]]; then missing+=("$name"); fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing staging configuration: %s\n' "${missing[@]}"
+            exit 1
+          fi
+          actual_host="$(node -e 'const u = new URL(process.env.SUPABASE_STORAGE_TEST_URL); if (u.protocol !== "https:") process.exit(2); console.log(u.hostname.toLowerCase())')"
+          expected_host="$(printf '%s' "$SUPABASE_STORAGE_TEST_EXPECTED_HOST" | tr '[:upper:]' '[:lower:]')"
+          if [[ "$actual_host" != "$expected_host" ]]; then
+            echo "Refusing to run: configured URL host does not match the approved staging host."
+            exit 1
+          fi
+          echo "Staging configuration preflight passed for host: $actual_host"
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Storage integration tests against staging only
+        run: bun run test:storage
+        env:
+          SUPABASE_STORAGE_TEST_URL: ${{ secrets.SUPABASE_STORAGE_TEST_URL }}
+          SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_STORAGE_TEST_SECRET_KEY: ${{ secrets.SUPABASE_STORAGE_TEST_SECRET_KEY }}
+          SUPABASE_STORAGE_TEST_EDITOR_EMAIL: ${{ secrets.SUPABASE_STORAGE_TEST_EDITOR_EMAIL }}
+          SUPABASE_STORAGE_TEST_EDITOR_PASSWORD: ${{ secrets.SUPABASE_STORAGE_TEST_EDITOR_PASSWORD }}
+          SUPABASE_STORAGE_TEST_MARKET_ID: ${{ secrets.SUPABASE_STORAGE_TEST_MARKET_ID }}
+          SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL: ${{ secrets.SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL }}
+          SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD: ${{ secrets.SUPABASE_STORAGE_TEST_CUSTOMER_PASSWORD }}
+          SUPABASE_STORAGE_TEST_EXPECTED_HOST: ${{ vars.SUPABASE_STORAGE_TEST_EXPECTED_HOST }}
+          SUPABASE_STORAGE_TEST_TARGET: staging
+          SUPABASE_STORAGE_TEST_CONFIRM: I_UNDERSTAND_THIS_CREATES_AND_DELETES_TEST_DATA
