@@ -2,7 +2,7 @@
 /**
  * End-to-end Supabase Storage regression test for MaisBarato.
  *
- * Uses a dedicated market-editor account and a service-role key only to seed
+ * Uses a dedicated market-editor account and a secret key only to seed
  * and clean isolated fixtures. Never point this at production.
  */
 import assert from 'node:assert/strict';
@@ -11,8 +11,8 @@ import { createClient } from '@supabase/supabase-js';
 
 const required = [
   'SUPABASE_STORAGE_TEST_URL',
-  'SUPABASE_STORAGE_TEST_ANON_KEY',
-  'SUPABASE_STORAGE_TEST_SERVICE_ROLE_KEY',
+  'SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY',
+  'SUPABASE_STORAGE_TEST_SECRET_KEY',
   'SUPABASE_STORAGE_TEST_EDITOR_EMAIL',
   'SUPABASE_STORAGE_TEST_EDITOR_PASSWORD',
   'SUPABASE_STORAGE_TEST_MARKET_ID',
@@ -57,16 +57,16 @@ const saoPauloDateParts = new Intl.DateTimeFormat('en-US', {
   return parts;
 }, {});
 const todayInSaoPaulo = `${saoPauloDateParts.year}-${saoPauloDateParts.month}-${saoPauloDateParts.day}`;
-const admin = createClient(url, process.env.SUPABASE_STORAGE_TEST_SERVICE_ROLE_KEY, {
+const admin = createClient(url, process.env.SUPABASE_STORAGE_TEST_SECRET_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const anon = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
+const anon = createClient(url, process.env.SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const editor = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
+const editor = createClient(url, process.env.SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const customer = createClient(url, process.env.SUPABASE_STORAGE_TEST_ANON_KEY, {
+const customer = createClient(url, process.env.SUPABASE_STORAGE_TEST_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
