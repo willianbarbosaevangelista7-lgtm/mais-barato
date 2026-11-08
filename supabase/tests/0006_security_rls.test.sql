@@ -2,7 +2,7 @@
 -- Uses two market accounts and two distinct markets. All fixtures are rolled back.
 
 BEGIN;
-SELECT extensions.plan(53);
+SELECT extensions.plan(55);
 
 SELECT extensions.ok(NOT has_function_privilege('anon', 'public.handle_new_user()', 'EXECUTE'), 'anon cannot execute handle_new_user directly');
 SELECT extensions.ok(NOT has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE'), 'authenticated cannot execute handle_new_user directly');
@@ -116,6 +116,23 @@ SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.products WHERE id IN ('sec
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.prices WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected prices');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.offers WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected offers');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.price_history WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected history');
+
+SELECT extensions.throws_ok(
+  $ SELECT public.save_market_item_v2(
+    '{"id":"sec-a-approved","name":"Produto A aprovado","brand":"Teste","category":"Teste","size":1,"unit":"un","group":"sec-test","imagePath":"sec-a-approved/photo.jpg"}'::jsonb,
+    'sec-market-a', 13, CURRENT_DATE, 'sec-admin-source-offer', NULL, NULL, 'admin'
+  ) $,
+  'P0001',
+  'Somente administradores podem registrar preços com origem admin.',
+  'market user cannot spoof admin price source'
+);
+SELECT extensions.throws_ok(
+  $ INSERT INTO public.import_batches(market_id, created_by, kind)
+     VALUES ('sec-market-a', '00000000-0000-0000-0000-000000000104', 'csv') $,
+  'P0001',
+  'created_by deve corresponder ao usuário autenticado.',
+  'market user cannot forge import batch creator'
+);
 RESET ROLE;
 
 -- Market B has the symmetric isolation guarantee.
