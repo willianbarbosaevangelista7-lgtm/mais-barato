@@ -50,7 +50,7 @@ jobs:
             if [[ -z "${!name:-}" ]]; then missing+=("$name"); fi
           done
           if (( ${#missing[@]} > 0 )); then
-            printf 'Missing staging configuration: %s\\n' "${missing[@]}"
+            printf 'Missing staging configuration: %s\n' "${missing[@]}"
             exit 1
           fi
           actual_host="$(node -e 'const u = new URL(process.env.SUPABASE_STORAGE_TEST_URL); if (u.protocol !== "https:") process.exit(2); console.log(u.hostname.toLowerCase())')"
