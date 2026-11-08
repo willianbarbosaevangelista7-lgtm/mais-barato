@@ -43,6 +43,13 @@
       "when": 1794009685631,
       "tag": "0005_product_price_center",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794144000000,
+      "tag": "0006_secure_admin_bootstrap_and_public_catalog",
+      "breakpoints": true
     }
   ]
 }
