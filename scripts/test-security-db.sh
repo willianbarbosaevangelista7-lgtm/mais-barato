@@ -75,6 +75,6 @@ for tag in "${migration_tags[@]}"; do
 done
 
 echo "==> Executando testes pgTAP"
-supabase test db
+supabase test db --local
 
 echo "==> Testes SQL concluídos."
