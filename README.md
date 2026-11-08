@@ -1,120 +1,68 @@
-# Mais Barato
-
-Crie um aplicativo web responsivo chamado MaisBarato, em português do Brasil, para comparar preços de produtos de supermercado e ajudar as pessoas a economizar.
-
-
-
-Objetivo: desenvolver um MVP funcional, priorizando ferramentas gratuitas, para testar inicialmente em um bairro da Zona Norte de São Paulo.
-
-
-
-Identidade visual
-
-
-
-- Cores: verde-escuro, verde-claro e branco.
-
-- Design moderno, simples, intuitivo e acessível.
-
-- Interface adaptada para celular e computador.
-
-- Moeda em reais (R$).
-
-- Textos em português brasileiro.
-
-
-
-Crie cinco áreas principais:
-
-
-
-1. Início: barra de pesquisa, ofertas do dia, mercados próximos e acesso à lista de compras.
-
-
-
-2. Busca de produtos: mostrar nome, marca, quantidade, imagem ilustrativa e preços do mesmo produto em diferentes supermercados. Permitir ordenar pelo menor preço.
-
-
-
-3. Comparação de preços: destacar o menor preço, mostrar a diferença em reais e porcentagem, informar a data da atualização e oferecer o botão “Adicionar à lista”.
-
-
-
-4. Lista de compras: permitir adicionar, remover e marcar produtos como comprados. Calcular o total estimado, mostrar o mercado mais barato para cada item e apresentar a economia potencial. Comparar também o custo de comprar tudo em um único mercado com o de dividir a compra entre mercados, usando os preços disponíveis.
-
-
-
-5. Área dos supermercados: criar uma interface de demonstração para cadastrar produtos, informar preços, criar ofertas e definir datas de validade.
-
-
-
-Funcionalidades importantes
-
-
-
-- Busca por nome do produto.
-
-- Filtros por mercado e categoria.
-
-- Comparação de produtos equivalentes, considerando marca, peso e volume.
-
-- Carrinho ou lista de compras persistente durante a navegação.
-
-- Dados de demonstração claramente identificados como fictícios.
-
-- Data de atualização visível em cada preço.
-
-- Não apresentar preços fictícios como se fossem ofertas reais.
-
-- Não afirmar que existem mercados próximos sem dados de localização confiáveis.
-
-
-
-Requisitos técnicos
-
-
-
-- Construa uma aplicação funcional, e não apenas imagens estáticas.
-
-- Utilize componentes reutilizáveis e código organizado.
-
-- Comece com dados locais de demonstração, sem exigir serviços pagos ou chaves de API.
-
-- Se necessário, utilize localStorage para preservar a lista no mesmo navegador.
-
-- Não implemente login obrigatório nesta primeira versão.
-
-- Deixe a arquitetura preparada para integrar futuramente um banco de dados e autenticação.
-
-- Não invente integrações com supermercados ou atualizações automáticas de preços.
-
-
-
-Primeira entrega: gere todas as cinco áreas navegáveis, com dados de demonstração, pesquisa funcional, comparação de preços, lista de compras com cálculo de totais e uma área demonstrativa para supermercados. Priorize uma experiência excelente no celular.
-
-
-
-Antes de finalizar, teste a navegação, os cálculos, a pesquisa e a inclusão e remoção de produtos da lista.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://mais-barato.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f119ac18-9b03-40ab-97ee-4eabe732fd6b).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+# MaisBarato
+
+Aplicativo web responsivo, em português do Brasil, para comparar preços de supermercado e ajudar consumidores a economizar. O projeto é desenvolvido com Lovable, React, TypeScript, TanStack Start/Query e Lovable Cloud.
+
+**Aplicação:** https://mais-barato.lovable.app  
+**Editor Lovable:** https://lovable.dev/projects/f119ac18-9b03-40ab-97ee-4eabe732fd6b
+
+## Funcionalidades
+
+### Para consumidores
+- Busca de produtos e comparação de preços entre mercados.
+- Comparação de itens equivalentes e cálculo de preço por unidade de medida.
+- Destaque do menor preço, ofertas válidas e data de atualização.
+- Lista de compras com estimativa de total e economia potencial.
+- Lista sincronizada à conta quando o usuário está autenticado.
+- Leitor de código de barras e busca de produtos por foto com identificação assistida por IA.
+- Histórico de preços disponível na comparação de produtos.
+- Produtos pendentes ou rejeitados não aparecem no catálogo público.
+
+### Para supermercados parceiros
+- Atualização rápida de preços por EAN, com leitura pela câmera ou digitação.
+- Cadastro compartilhado de produtos, evitando duplicação por código de barras.
+- Importação de planilhas Excel/CSV com validação e revisão antes da publicação.
+- Leitura assistida por IA de fotos de etiquetas; os dados extraídos também passam por revisão.
+- Consulta aos lotes de importação e histórico de alterações.
+- Relatórios de produtos, alterações de preço, ofertas vencidas e preços desatualizados.
+- Controle de acesso por vínculo entre conta e supermercado.
+
+### Para administradores
+- Aprovação, edição, rejeição e remoção segura de produtos.
+- Gerenciamento de vínculos entre contas e supermercados.
+- Visão administrativa dos mercados e relatórios.
+
+## Segurança e dados
+- O catálogo compartilhado é armazenado no Lovable Cloud.
+- As permissões são aplicadas no banco por RLS e funções de autorização; esconder botões na interface não substitui essas regras.
+- As fotos de produtos ficam em bucket privado e são exibidas por URLs assinadas.
+- Alterações de preços geram histórico no banco.
+- Importações ficam em revisão e não são exibidas aos consumidores antes da publicação.
+- Dados demonstrativos devem permanecer identificados como fictícios.
+- Nunca envie arquivos .env, senhas, tokens privados ou chaves administrativas para o Git. Configure segredos no ambiente apropriado do Lovable/Cloud.
+
+## Desenvolvimento
+
+Requisitos: Node.js e Bun ou npm.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+git clone https://github.com/willianbarbosaevangelista7-lgtm/mais-barato.git
+cd mais-barato
+bun install
+bun run dev
 ```
+
+Scripts disponíveis:
+
+```sh
+bun run build
+bun run lint
+bun run test
+```
+
+## Documentação do projeto
+- AGENTS.md: regras importantes para alterações no projeto e integração com Lovable.
+- roadmap.md: funcionalidades entregues e pendências conhecidas.
+- .lovable/plan/: planos de arquitetura e evolução do produto.
+
+## Cuidados ao contribuir
+O repositório é conectado ao Lovable. Commits enviados à branch conectada sincronizam com o editor. Não reescreva o histórico já publicado (por exemplo, com force-push, rebase ou amend). Mantenha a branch principal funcional e respeite as regras de banco, autenticação e repositório descritas em AGENTS.md.
