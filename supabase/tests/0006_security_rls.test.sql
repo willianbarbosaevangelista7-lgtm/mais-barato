@@ -4,7 +4,7 @@
 -- The transaction is rolled back; no persistent fixture data is created.
 
 BEGIN;
-SELECT extensions.plan(23);
+SELECT extensions.plan(24);
 
 -- 1) Trigger function cannot be called directly by API roles.
 SELECT extensions.ok(
@@ -48,6 +48,12 @@ SELECT extensions.ok(
       AND role = 'admin'
   ),
   'first signup is not promoted to admin'
+);
+SELECT extensions.is(
+  (SELECT count(*)::integer FROM public.user_roles
+   WHERE user_id = '00000000-0000-0000-0000-000000000101'),
+  1,
+  'first signup receives exactly one role'
 );
 
 -- Add a deliberately provisioned admin, then prove later signups do not
