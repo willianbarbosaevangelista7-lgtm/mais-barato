@@ -52,7 +52,8 @@ const customer = process.env.SUPABASE_STORAGE_TEST_CUSTOMER_EMAIL
 
 const runId = randomUUID().replaceAll('-', '');
 const productIds = ['approved', 'pending', 'rejected'].map((state) => `stg-${runId}-${state}`);
-const paths = productIds.map((id) => `${id}/fixture.png`);
+const paths = productIds.map((id) => `${id}/${Date.now()}.jpg`);
+const orphanPath = `stg-${runId}-orphan/${Date.now()}.jpg`;
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p6sAAAAASUVORK5CYII=',
   'base64',
@@ -222,7 +223,7 @@ try {
   console.log(`\nStorage integration tests passed: ${checks} checks.`);
 } finally {
   // Cleanup runs with service_role even when an assertion fails.
-  const cleanupPaths = [...paths, `${productIds[0]}/customer-forbidden.png`];
+  const cleanupPaths = [...paths, orphanPath, `${productIds[0]}/customer-forbidden.png`];
   const { error: removeError } = await admin.storage.from(bucket).remove(cleanupPaths);
   if (removeError) console.error(`Cleanup warning (objects): ${removeError.message}`);
   const { error: productCleanupError } = await admin.from('products').delete().in('id', productIds);
