@@ -2,7 +2,7 @@
 -- Uses two market accounts and two distinct markets. All fixtures are rolled back.
 
 BEGIN;
-SELECT extensions.plan(49);
+SELECT extensions.plan(53);
 
 SELECT extensions.ok(NOT has_function_privilege('anon', 'public.handle_new_user()', 'EXECUTE'), 'anon cannot execute handle_new_user directly');
 SELECT extensions.ok(NOT has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE'), 'authenticated cannot execute handle_new_user directly');
@@ -71,7 +71,9 @@ VALUES
   ('product-images', 'sec-a-rejected/photo.jpg'),
   ('product-images', 'sec-b-approved/photo.jpg'),
   ('product-images', 'sec-b-pending/photo.jpg'),
-  ('product-images', 'sec-b-rejected/photo.jpg');
+  ('product-images', 'sec-b-rejected/photo.jpg'),
+  ('product-images', 'sec-a-pending/orphan.jpg'),
+  ('product-images', 'sec-b-pending/orphan.jpg');
 
 -- Public visitors see both approved products and no non-approved products.
 SET LOCAL ROLE anon;
@@ -108,6 +110,8 @@ SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIK
 SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 4, 'market A sees public approved prices and only its own private prices');
 SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 4, 'market A sees public approved offers and only its own private offers');
 SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 4, 'market A sees public approved history and only its own private history');
+SELECT extensions.is((SELECT count(*)::integer FROM storage.objects WHERE bucket_id = 'product-images' AND name LIKE 'sec-%/photo.jpg'), 4, 'market A reads approved images and only its own pending/rejected images');
+SELECT extensions.is((SELECT count(*)::integer FROM storage.objects WHERE bucket_id = 'product-images' AND name LIKE 'sec-%/orphan.jpg'), 0, 'market A cannot read unlinked/orphan image objects');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.products WHERE id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected products');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.prices WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected prices');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.offers WHERE product_id IN ('sec-b-pending','sec-b-rejected')), 'market A cannot read market B pending/rejected offers');
@@ -121,6 +125,8 @@ SELECT extensions.is((SELECT count(*)::integer FROM public.products WHERE id LIK
 SELECT extensions.is((SELECT count(*)::integer FROM public.prices WHERE product_id LIKE 'sec-%'), 4, 'market B sees public approved prices and only its own private prices');
 SELECT extensions.is((SELECT count(*)::integer FROM public.offers WHERE product_id LIKE 'sec-%'), 4, 'market B sees public approved offers and only its own private offers');
 SELECT extensions.is((SELECT count(*)::integer FROM public.price_history WHERE product_id LIKE 'sec-%'), 4, 'market B sees public approved history and only its own private history');
+SELECT extensions.is((SELECT count(*)::integer FROM storage.objects WHERE bucket_id = 'product-images' AND name LIKE 'sec-%/photo.jpg'), 4, 'market B reads approved images and only its own pending/rejected images');
+SELECT extensions.is((SELECT count(*)::integer FROM storage.objects WHERE bucket_id = 'product-images' AND name LIKE 'sec-%/orphan.jpg'), 0, 'market B cannot read unlinked/orphan image objects');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.products WHERE id IN ('sec-a-pending','sec-a-rejected')), 'market B cannot read market A pending/rejected products');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.prices WHERE product_id IN ('sec-a-pending','sec-a-rejected')), 'market B cannot read market A pending/rejected prices');
 SELECT extensions.ok(NOT EXISTS (SELECT 1 FROM public.offers WHERE product_id IN ('sec-a-pending','sec-a-rejected')), 'market B cannot read market A pending/rejected offers');
